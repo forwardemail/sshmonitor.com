@@ -60,10 +60,10 @@ LOCK_DURATION=3600 # Don't send another alert for this many seconds
 send_email_api() {
     local subject="$1"
     local body="$2"
-    
+
     curl -X POST "https://api.forwardemail.net/v1/emails" \
       -H "Content-Type: application/json" \
-      -u "$FORWARD_EMAIL_API_KEY:"
+      -u "$FORWARD_EMAIL_API_KEY:" \
       -d '{
         "from": "'"$EMAIL_FROM"'",
         "to": "'"$EMAIL_TO"'",
@@ -71,7 +71,7 @@ send_email_api() {
         "html": "'"$body"'",
         "text": "'"$body"'"
       }'
-    
+
     echo "Alert email sent via API at $(date)" >> /var/log/ssh_monitor.log
 }
 
@@ -79,64 +79,85 @@ send_email_api() {
 send_email_smtp() {
     local subject="$1"
     local body="$2"
-    
+
     echo -e "Subject: $subject\nFrom: $EMAIL_FROM\nTo: $EMAIL_TO\n\n$body" | \
     sendmail -t
-    
+
     echo "Alert email sent via SMTP at $(date)" >> /var/log/ssh_monitor.log
 }
 
 # Check if we should send an alert (avoid alert flooding)
 should_send_alert() {
     if [ -f "$ALERT_LOCKFILE" ]; then
-        # Check if lock file is still valid (not expired)
-        lock_time=$(cat "$ALERT_LOCKFILE")
+        lockfile_time=$(stat -c %Y "$ALERT_LOCKFILE")
         current_time=$(date +%s)
-        
-        if [ $((current_time - lock_time)) -lt $LOCK_DURATION ]; then
-            return 1 # Lock still valid, don't send alert
+        elapsed_time=$((current_time - lockfile_time))
+
+        if [ $elapsed_time -lt $LOCK_DURATION ]; then
+            return 1 # Don't send alert
         fi
     fi
-    
-    # Create or update lock file with current timestamp
-    date +%s > "$ALERT_LOCKFILE"
+
+    # Create or update lockfile
+    touch "$ALERT_LOCKFILE"
     return 0 # Send alert
 }
 
-# Check for failed SSH login attempts
-check_failed_logins() {
-    # Get failed login attempts in the last 10 minutes
-    local failed_attempts=$(grep "Failed password" "$LOG_FILE" | grep -i ssh | grep -i "$(date +"%b %d")" | wc -l)
-    
-    if [ "$failed_attempts" -ge "$FAILED_THRESHOLD" ]; then
-        if should_send_alert; then
-            local subject="SSH Alert: $failed_attempts failed login attempts detected"
-            local body="SSH Monitor Alert\n\nDetected $failed_attempts failed SSH login attempts on $(hostname) in the last check period.\n\nRecent failed login attempts:\n\n$(grep "Failed password" "$LOG_FILE" | grep -i ssh | grep -i "$(date +"%b %d")" | tail -10)\n\nThis alert was generated automatically by the SSH Monitor script."
-            
-            # Send alert via API or SMTP
-            if [ -n "$FORWARD_EMAIL_API_KEY" ]; then
-                send_email_api "$subject" "$body"
-            else
-                send_email_smtp "$subject" "$body"
-            fi
-        fi
-    fi
-}
+# Get hostname for the alert
+HOSTNAME=$(hostname)
+
+# Check for failed SSH login attempts in the last 10 minutes
+TIMEFRAME="10 minutes ago"
+FAILED_ATTEMPTS=$(grep "Failed password" $LOG_FILE | grep -i ssh | grep -v "grep" | awk '{print $1,$2,$3,$11}' | sort | uniq -c | sort -nr)
+FAILED_COUNT=$(echo "$FAILED_ATTEMPTS" | wc -l)
 
 # Check for successful logins
-check_successful_logins() {
-    # Get successful login attempts in the last 10 minutes
-    local successful_logins=$(grep "Accepted" "$LOG_FILE" | grep -i ssh | grep -i "$(date +"%b %d")" | tail -5)
-    
-    if [ -n "$successful_logins" ]; then
-        echo "Successful logins detected at $(date):" >> /var/log/ssh_monitor.log
-        echo "$successful_logins" >> /var/log/ssh_monitor.log
-    fi
-}
+SUCCESSFUL_LOGINS=$(grep "Accepted password\|Accepted publickey" $LOG_FILE | grep -i ssh | grep -v "grep" | awk '{print $1,$2,$3,$9,$11}' | sort | tail -5)
 
-# Main execution
-check_failed_logins
-check_successful_logins
+# Check for unusual login times (outside business hours 8am-6pm)
+HOUR=$(date +%H)
+UNUSUAL_TIME=false
+if [ "$HOUR" -lt 8 ] || [ "$HOUR" -gt 18 ]; then
+    UNUSUAL_TIME=true
+fi
+
+# Prepare email content with HTML formatting
+EMAIL_SUBJECT="SSH Security Alert: $HOSTNAME - $(date +%Y-%m-%d)"
+EMAIL_BODY="<h2>SSH Security Monitoring Alert</h2>
+<p><strong>Server:</strong> $HOSTNAME</p>
+<p><strong>Time:</strong> $(date)</p>
+<p><strong>Alert Type:</strong> Periodic SSH Activity Report</p>
+
+<h3>Failed Login Attempts (Last 10 minutes):</h3>
+<pre>$FAILED_ATTEMPTS</pre>
+
+<h3>Recent Successful Logins:</h3>
+<pre>$SUCCESSFUL_LOGINS</pre>
+
+<p>This is an automated alert from your SSH monitoring system.</p>
+<p>For more information, please check the server logs at $LOG_FILE</p>"
+
+# Add warning for unusual login times
+if [ "$UNUSUAL_TIME" = true ]; then
+    EMAIL_BODY="$EMAIL_BODY
+<p style='color: red;'><strong>WARNING:</strong> Login activity detected outside normal business hours!</p>"
+fi
+
+# Add warning for high number of failed attempts
+if [ $FAILED_COUNT -ge $FAILED_THRESHOLD ]; then
+    EMAIL_BODY="$EMAIL_BODY
+<p style='color: red;'><strong>WARNING:</strong> High number of failed login attempts detected!</p>"
+
+    # Send alert if threshold exceeded and we're not in lockout period
+    if should_send_alert; then
+        # Uncomment one of these methods based on your preference:
+        send_email_api "$EMAIL_SUBJECT" "$EMAIL_BODY"
+        # send_email_smtp "$EMAIL_SUBJECT" "$EMAIL_BODY"
+    fi
+fi
+
+# Always log activity summary
+echo "SSH Monitor ran at $(date) - Found $FAILED_COUNT failed attempts" >> /var/log/ssh_monitor.log
 
 exit 0
 ```
