@@ -1,0 +1,32 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="400" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Main shield shape -->
+  <path d="M300,50 L450,100 L450,200 C450,300 300,350 300,350 C300,350 150,300 150,200 L150,100 Z" fill="#e6f7ff" stroke="#2c3e50" stroke-width="5"/>
+  
+  <!-- Lock icon -->
+  <rect x="250" y="150" width="100" height="80" rx="10" ry="10" fill="#3498db" stroke="#2c3e50" stroke-width="3"/>
+  <rect x="270" y="120" width="60" height="40" rx="5" ry="5" fill="#3498db" stroke="#2c3e50" stroke-width="3"/>
+  <circle cx="300" cy="190" r="10" fill="#f8f9fa"/>
+  <rect x="295" y="180" width="10" height="20" fill="#f8f9fa"/>
+  
+  <!-- Terminal window with SSH command -->
+  <rect x="150" y="250" width="300" height="80" rx="5" ry="5" fill="#2c3e50"/>
+  <text x="170" y="280" font-family="monospace" font-size="14" fill="#ffffff">$ ssh-monitor --alert-threshold=3</text>
+  <text x="170" y="300" font-family="monospace" font-size="14" fill="#2ecc71">✓ Monitoring active | 0 threats</text>
+  <text x="170" y="320" font-family="monospace" font-size="14" fill="#ffffff">Alerts sent to: admin@domain.com</text>
+  
+  <!-- Benefit icons -->
+  <circle cx="150" cy="100" r="25" fill="#f39c12" opacity="0.8"/>
+  <text x="150" y="105" font-family="Arial" font-size="16" fill="#ffffff" text-anchor="middle">🔒</text>
+  
+  <circle cx="450" cy="100" r="25" fill="#2ecc71" opacity="0.8"/>
+  <text x="450" y="105" font-family="Arial" font-size="16" fill="#ffffff" text-anchor="middle">✓</text>
+  
+  <circle cx="150" cy="200" r="25" fill="#e74c3c" opacity="0.8"/>
+  <text x="150" y="205" font-family="Arial" font-size="16" fill="#ffffff" text-anchor="middle">⚠️</text>
+  
+  <circle cx="450" cy="200" r="25" fill="#3498db" opacity="0.8"/>
+  <text x="450" y="205" font-family="Arial" font-size="16" fill="#ffffff" text-anchor="middle">⏱️</text>
+</svg>
