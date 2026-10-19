@@ -1,0 +1,1009 @@
+# SSH Monitor: full text
+
+> SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report through Forward Email when they pass a threshold.
+
+## Free SSH Monitoring with Email Alerts
+
+> SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report when they pass a threshold.
+
+Source: https://sshmonitor.com/
+
+### What is SSH Monitor?
+
+SSH Monitor is `ssh_monitor.sh`, a single Bash script that you run from cron on a Linux server. Each run reads only the SSH log lines added since the last run, counts the failed login attempts in them and collects the successful logins. When the count reaches your threshold (5 by default), the script sends one HTML email through the [Forward Email API](https://forwardemail.net/en/email-api) or through your local `sendmail`.
+
+The script is free. It needs only standard tools (`bash`, `awk`, `sort`, `stat`) plus `curl` or a working `sendmail`. You can read every line of [ssh_monitor.sh on GitHub](https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh) before you install it.
+
+### What does SSH Monitor do?
+
+#### Reads only new lines
+
+The script stores the log file's inode and byte offset in `/var/lib/ssh_monitor`, so each run reads only what sshd wrote since the last run. It notices log rotation and truncation.
+
+#### Counts failed attempts
+
+It counts `Failed password`, `Failed publickey`, keyboard-interactive failures, PAM `authentication failure` lines, `Invalid user` and connections closed before login, and counts each attempt once.
+
+#### Lists recent logins
+
+The alert shows the last 5 successful logins, sorted by time, with the user, source IP and method (password or publickey).
+
+#### Flags off-hours logins
+
+Any successful login with a log time before 08:00 or after 18:59 gets its own warning in the email. You can change the hours.
+
+#### Limits alert floods
+
+After a sent alert, the script waits `LOCK_DURATION` seconds (3600 by default). Failures during that wait go into the next alert instead of being dropped.
+
+#### Retries failed sends
+
+If the API call or `sendmail` fails, the script does not start the cooldown and keeps the read position, so the next run tries again with the same lines.
+
+It works with `/var/log/auth.log` (Debian, Ubuntu), `/var/log/secure` (RHEL, Rocky, AlmaLinux, Fedora) and the systemd journal, in that order, and with both classic syslog and ISO 8601 timestamps.
+
+### What does the alert email look like?
+
+The subject is `SSH Security Alert: <hostname> - <YYYY-MM-DD>`. The body is HTML, and the API also sends a plain-text copy. This is the text of a real alert from a test run, with documentation IP addresses:
+
+```text
+SSH Security Monitoring Alert
+Server: web-01
+Time: <date of the run>
+Source: /var/log/auth.log (new lines since the last check)
+
+Failed Login Attempts: 6
+  Count  Source IP                               User names tried
+      4  203.0.113.5                             root admin
+      1  198.51.100.8                            deploy
+      1  198.51.100.7                            oracle
+
+Successful Logins (last 5):
+2026-03-03 23:05:00  deploy  192.0.2.10  publickey
+
+This is an automated alert from your SSH monitoring system.
+WARNING: Successful logins outside business hours (08:00 to 18:59):
+2026-03-03 23:05:00  deploy  192.0.2.10
+WARNING: High number of failed login attempts detected!
+```
+
+Failed attempts are grouped by source IP, with the count and the user names tried from that address. Text taken from the log is HTML-escaped, so a crafted user name cannot change how the email looks.
+
+### What does SSH Monitor not do?
+
+SSH Monitor sends alerts. It does not change anything on your server. Know these limits before you rely on it:
+
+- It does not block IP addresses. Pair it with a blocker such as [Fail2Ban](https://sshmonitor.com/fail2ban-vs-logwatch/) if you want bans.
+- Successful logins alone do not trigger an email. They appear in an alert that failed attempts triggered, with off-hours logins flagged. See [SSH login alerts by email](https://sshmonitor.com/ssh-login-alerts/) for an email on every login.
+- It is not real time. It runs when cron runs it, every 10 minutes in the example setup.
+- It does not record shell sessions, commands or file transfers.
+
+### How do you install it?
+
+Download the script, set your addresses and API key, and add one cron line. The [install guide](https://sshmonitor.com/install/) covers each step, the requirements and troubleshooting.
+
+```bash
+sudo curl -fsSL https://sshmonitor.com/ssh_monitor.sh -o /usr/local/bin/ssh_monitor.sh
+sudo chmod 700 /usr/local/bin/ssh_monitor.sh
+sudo nano /usr/local/bin/ssh_monitor.sh   # set EMAIL_TO, EMAIL_FROM and FORWARD_EMAIL_API_KEY
+sudo /usr/local/bin/ssh_monitor.sh && sudo tail -n 3 /var/log/ssh_monitor.log
+```
+
+Then add `*/10 * * * * /usr/local/bin/ssh_monitor.sh` to root's crontab with `sudo crontab -e`.
+
+### Why get SSH alerts by email?
+
+Any server with SSH open to the internet receives automated login attempts. The log records them, but nobody reads the log until something goes wrong. An email puts a summary in front of you when failures pile up, and the list of recent successful logins lets you spot a login you do not recognize.
+
+The email is also a copy of the evidence that lives off the server. If someone gets in and edits the log, the alert already in your inbox still shows what the log said at the time. You can read it on your phone, forward it to your team or filter it into a folder.
+
+### Guides on this site
+
+- [Install guide](https://sshmonitor.com/install/): requirements, configuration, cron schedule, testing and troubleshooting.
+- [SSH login alerts by email](https://sshmonitor.com/ssh-login-alerts/): what the script reports about successful logins, and how to get an email for every login with PAM.
+- [Detect SSH brute-force attempts](https://sshmonitor.com/ssh-brute-force-detection/): read the log, get alerts and block attackers.
+- [SSH Monitor vs Fail2Ban vs Logwatch](https://sshmonitor.com/fail2ban-vs-logwatch/): three tools that solve different problems.
+- [FAQ](https://sshmonitor.com/faq/): short answers about limits, distributions, providers and alerts.
+- [About](https://sshmonitor.com/about/): who makes SSH Monitor, how to contact the team and the privacy note.
+
+### Who makes SSH Monitor?
+
+The [Forward Email](https://forwardemail.net) team publishes SSH Monitor and this site. Forward Email is an open-source email service. The script uses its API to send the alert, and you can also send through any mail server your `sendmail` command reaches. Read more on the [about page](https://sshmonitor.com/about/).
+
+## How to Install SSH Monitor
+
+> To install ssh_monitor.sh, download it, set three values, test one run and schedule it with cron. This guide also covers sending setup and troubleshooting.
+
+Source: https://sshmonitor.com/install/
+
+### What do you need?
+
+You need a Linux server with root access and a way to send email. The script finds the SSH log on Debian, Ubuntu and Red Hat style systems without changes.
+
+Table: Requirements for ssh_monitor.sh
+| Requirement | Details |
+| --- | --- |
+| Operating system | Linux. The script uses GNU `stat -c`, so macOS and BSD need changes. |
+| Shell and tools | `bash`, `awk` (mawk or gawk), `sed`, `grep`, `sort`, `stat`, `tail`, `head`, `hostname`, `date` |
+| Sending | `curl` for the Forward Email API (default), or a working `sendmail` command |
+| SSH log | `/var/log/auth.log` (Debian, Ubuntu), then `/var/log/secure` (RHEL, CentOS, Rocky, AlmaLinux, Fedora), then the systemd journal through `journalctl` |
+| Scheduler | `cron` (root's crontab) |
+| Permissions | Root, to read the SSH log and write `/var/lib/ssh_monitor/` and `/var/log/ssh_monitor.log` |
+
+Debian 12 and later do not install rsyslog by default, so a fresh install may have no `/var/log/auth.log` ([Debian release notes, section 5.1.7](https://www.debian.org/releases/bookworm/amd64/release-notes/ch-information.en.html)). The script then reads the journal for the `ssh` and `sshd` units, so you do not need to install rsyslog.
+
+### How do you set up sending with Forward Email?
+
+The script sends through the Forward Email API by default. The API and SMTP sending need a paid Forward Email plan with outbound SMTP set up for your domain ([plans](https://forwardemail.net/en/pricing)).
+
+1. Add your domain to Forward Email and finish the outbound SMTP setup (DKIM, Return-Path and DMARC records) under My Account, Domains, Settings.
+2. Create an alias for the sender, for example `ssh-alerts@yourdomain.com`. The API requires the `from` address to be an alias of your domain.
+3. Copy your API token from [My Account, Security](https://forwardemail.net/my-account/security).
+
+To check the token before you install the script, send a test message with the same API call the script uses. The fields are form-encoded, as in the [API reference](https://forwardemail.net/en/email-api):
+
+```bash
+curl -sS --fail -X POST https://api.forwardemail.net/v1/emails \
+  -u "YOUR_API_TOKEN:" \
+  --data-urlencode "from=ssh-alerts@yourdomain.com" \
+  --data-urlencode "to=admin@yourdomain.com" \
+  --data-urlencode "subject=SSH Monitor test" \
+  --data-urlencode "text=It works."
+```
+
+The address that receives alerts can be any mailbox. If it is on a domain that uses Forward Email for forwarding only, the free plan covers it: you set MX and TXT DNS records and need no account.
+
+### Step 1: Download the script
+
+Save the script to `/usr/local/bin` and make it readable and executable by root only, since it will hold your API token.
+
+```bash
+sudo curl -fsSL https://sshmonitor.com/ssh_monitor.sh -o /usr/local/bin/ssh_monitor.sh
+sudo chown root:root /usr/local/bin/ssh_monitor.sh
+sudo chmod 700 /usr/local/bin/ssh_monitor.sh
+```
+
+The same file is in the [GitHub repository](https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh). Read it before you run it.
+
+### Step 2: Set the configuration
+
+Open the script with `sudo nano /usr/local/bin/ssh_monitor.sh` and edit the variables at the top.
+
+Table: Configuration variables in ssh_monitor.sh
+| Variable | Default | What it controls |
+| --- | --- | --- |
+| `EMAIL_TO` | `admin@yourdomain.com` | Address that receives alerts |
+| `EMAIL_FROM` | `ssh-alerts@yourdomain.com` | Sender address, an alias on your Forward Email domain |
+| `FORWARD_EMAIL_API_KEY` | `your_api_key_here` | Your Forward Email API token |
+| `SEND_METHOD` | `api` | `api` for the Forward Email API, `smtp` for the local `sendmail` command |
+| `LOG_FILE` | `/var/log/auth.log` | SSH log to read. If it does not exist, the script uses `/var/log/secure`, then the systemd journal |
+| `FAILED_THRESHOLD` | `5` | Failed attempts in the new log lines that trigger an email |
+| `ALERT_LOCKFILE` | `/tmp/ssh_monitor_alert.lock` | File whose change time marks the last sent alert |
+| `LOCK_DURATION` | `3600` | Seconds to wait after a sent alert before the next one |
+| `STATE_DIR` | `/var/lib/ssh_monitor` | Where the read position (`position`) or journal cursor (`journal.cursor`) is stored |
+| `RUN_LOG` | `/var/log/ssh_monitor.log` | One line per run |
+| `BUSINESS_HOURS_START` | `8` | Logins before this hour get an off-hours warning |
+| `BUSINESS_HOURS_END` | `18` | Logins after this hour (from 19:00) get an off-hours warning |
+| `JOURNAL_SINCE` | `24 hours ago` | How far back the first journal read goes |
+
+The threshold applies to the lines added since the last run, so with a 10-minute schedule it means 5 failed attempts within about 10 minutes. Raise `FAILED_THRESHOLD` if you only want to hear about larger bursts, and raise `LOCK_DURATION` to get fewer emails. Failures that arrive during the cooldown are not lost: they go into the next alert.
+
+### Step 3: Choose API or sendmail
+
+The API is on by default. To send through a local mail transfer agent instead, set:
+
+```bash
+SEND_METHOD="smtp"
+```
+
+The sendmail path pipes a message to `sendmail -t`, so you need an MTA such as msmtp or Postfix that relays through an SMTP server. With msmtp on Debian or Ubuntu, install `msmtp msmtp-mta` and create `/etc/msmtprc` (mode 600) with your Forward Email alias and its generated password:
+
+```text
+defaults
+auth on
+tls on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile /var/log/msmtp.log
+
+account forwardemail
+host smtp.forwardemail.net
+port 465
+tls_starttls off
+from ssh-alerts@yourdomain.com
+user ssh-alerts@yourdomain.com
+password YOUR_GENERATED_ALIAS_PASSWORD
+
+account default : forwardemail
+```
+
+Forward Email accepts SMTP on port 465 (TLS) and 587 (STARTTLS). The [Forward Email FAQ](https://forwardemail.net/en/faq) has setup guides for sendmail, Exim, msmtp and Postfix.
+
+### Step 4: Run a test
+
+Run the script once by hand and read its log:
+
+```bash
+sudo /usr/local/bin/ssh_monitor.sh
+sudo tail -n 5 /var/log/ssh_monitor.log
+```
+
+You should see `SSH Monitor ran at ... - Found N failed attempts in /var/log/auth.log` (or the file or journal it used). The first run reads the whole current log file, or the last 24 hours of the journal, so it can find older attempts. Later runs read only new lines.
+
+An email goes out only when `N` is at least `FAILED_THRESHOLD` and no alert went out in the last `LOCK_DURATION` seconds. To force a test email, set `FAILED_THRESHOLD=0`, remove the lock file with `sudo rm -f /tmp/ssh_monitor_alert.lock`, run the script, then set the threshold back.
+
+After a send, the log shows `Alert email sent via API` or `Alert email via API failed`. On failure, `curl` prints the HTTP error to the terminal, and the next run sends the same lines again.
+
+### Step 5: Schedule it with cron
+
+Open root's crontab with `sudo crontab -e` and add this line to run the script every 10 minutes:
+
+```text
+*/10 * * * * /usr/local/bin/ssh_monitor.sh
+```
+
+The schedule sets both how soon you hear about a burst and the time window for `FAILED_THRESHOLD`. If you run it every 5 minutes, consider a lower threshold.
+
+### Step 6: Keep an eye on the run log
+
+The script appends to `/var/log/ssh_monitor.log` on every run, which is at least 144 lines a day at a 10-minute interval. Add it to logrotate if you keep servers for a long time:
+
+```text
+/var/log/ssh_monitor.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+```
+
+Save that as `/etc/logrotate.d/ssh_monitor`.
+
+### Troubleshooting
+
+#### No email arrives
+
+Check `/var/log/ssh_monitor.log` first. If the failed count is below the threshold, no email is due. If an alert went out in the last hour, the lock file holds the next one back and the attempts wait for the next alert. If the log says the API call failed, test your token with the `curl` command above and confirm that `EMAIL_FROM` is an alias on a domain with outbound SMTP set up.
+
+#### no SSH log found
+
+The run log shows this when none of `LOG_FILE`, `/var/log/secure` and `journalctl` exist. Set `LOG_FILE` to the file your syslog daemon writes sshd messages to.
+
+#### The count is always 0
+
+Run `sudo tail /var/log/auth.log` (or `sudo journalctl -u ssh -u sshd -n 20`) and check that sshd lines appear there. If they do, check `/var/lib/ssh_monitor/position`: the script only counts lines added after that position. Delete the file to make the next run read the whole log again. See [detecting SSH brute-force attempts](https://sshmonitor.com/ssh-brute-force-detection/) for the log lines the script counts.
+
+#### stat: illegal option -- c
+
+You are on macOS or BSD. The script uses GNU `stat -c` for the lock and the read position. It targets Linux.
+
+### How do you uninstall it?
+
+Remove the cron line with `sudo crontab -e`, then delete the files:
+
+```bash
+sudo rm -f /usr/local/bin/ssh_monitor.sh /tmp/ssh_monitor_alert.lock /var/log/ssh_monitor.log
+sudo rm -rf /var/lib/ssh_monitor
+```
+
+## SSH Login Alerts by Email
+
+> SSH Monitor lists recent successful SSH logins in each alert and flags logins outside business hours, but it only sends an alert when failed attempts reach a threshold. For an email on every login, add a small PAM hook.
+
+Source: https://sshmonitor.com/ssh-login-alerts/
+
+### Does SSH Monitor email you on every SSH login?
+
+No. SSH Monitor sends an email only when the failed attempts in the new log lines reach `FAILED_THRESHOLD`. A successful login on its own does not trigger anything. When an alert does go out, it includes the last 5 successful logins from those lines so you can check them.
+
+If you want to know about each login as it happens, use the PAM setup below. You can run it next to SSH Monitor: one tells you about logins, the other about failed attempts.
+
+### What does SSH Monitor show about successful logins?
+
+The script reads lines like these from the auth log:
+
+```text
+Mar  3 10:05:00 web-01 sshd[2211]: Accepted publickey for deploy from 192.0.2.10 port 51000 ssh2: ED25519 SHA256:...
+Mar  3 11:42:17 web-01 sshd[2390]: Accepted password for alice from 192.0.2.44 port 52114 ssh2
+```
+
+It reads every `Accepted <method>` line (password, publickey, keyboard-interactive/pam), turns the log time into a full date and time, sorts by it and keeps the 5 newest, oldest first. For classic syslog lines, which have no year, it uses the current year, or last year for months later than the current one.
+
+Each login whose log time falls before 08:00 or after 18:59 is also listed under an off-hours warning. You can change the hours with `BUSINESS_HOURS_START` and `BUSINESS_HOURS_END`.
+
+### How do you get an email for every SSH login?
+
+Use `pam_exec`, a standard Linux PAM module that runs a command during login. When sshd opens a session, `pam_exec` runs your script and passes the user and remote host in environment variables such as `PAM_USER`, `PAM_RHOST` and `PAM_TYPE` ([pam_exec manual](https://man7.org/linux/man-pages/man8/pam_exec.8.html)). This needs `UsePAM yes` in `/etc/ssh/sshd_config`, which is the setting on Debian, Ubuntu and Red Hat style systems.
+
+#### 1. Create the notify script
+
+Save this as `/usr/local/bin/ssh-login-notify.sh`. It uses the same `sendmail` setup as the [install guide](https://sshmonitor.com/install/), for example msmtp relaying through Forward Email.
+
+```bash
+#!/bin/bash
+# Email a short notice when an SSH session opens. Called by pam_exec.
+[ "$PAM_TYPE" = "open_session" ] || exit 0
+
+{
+  echo "Subject: SSH login: $PAM_USER on $(hostname)"
+  echo "From: ssh-alerts@yourdomain.com"
+  echo "To: admin@yourdomain.com"
+  echo
+  echo "User: $PAM_USER"
+  echo "Remote host: $PAM_RHOST"
+  echo "Service: $PAM_SERVICE"
+  echo "Time: $(date)"
+} | sendmail -t
+
+exit 0
+```
+
+Make it executable by root only:
+
+```bash
+sudo chown root:root /usr/local/bin/ssh-login-notify.sh
+sudo chmod 700 /usr/local/bin/ssh-login-notify.sh
+```
+
+#### 2. Add the PAM line
+
+Add this line at the end of `/etc/pam.d/sshd`:
+
+```text
+session optional pam_exec.so /usr/local/bin/ssh-login-notify.sh
+```
+
+`optional` means a failed notification does not block the login. Keep your current SSH session open and test with a second login before you log out, so a mistake cannot lock you out.
+
+#### 3. Test it
+
+Log in from another terminal and watch for the email. If it does not, check your MTA log (for msmtp, the `logfile` you set) and run the script by hand with test values:
+
+```bash
+sudo PAM_TYPE=open_session PAM_USER=test PAM_RHOST=192.0.2.1 PAM_SERVICE=sshd /usr/local/bin/ssh-login-notify.sh
+```
+
+### Things to know about per-login alerts
+
+- `pam_exec` waits for the script to finish, and `sendmail` through msmtp waits for the SMTP server. A slow mail server makes logins slow.
+- Automation accounts that log in often (deploy users, backup jobs) will fill your inbox. Add a check such as `[ "$PAM_USER" = "deploy" ] && exit 0` near the top of the script to skip them.
+- The notice fires when sshd opens a PAM session, which happens for shell logins and for commands run over SSH.
+- `pam_exec` sends the script output to `/dev/null` by default, so the person logging in sees nothing in their terminal.
+
+### Which alert should you use?
+
+Table: SSH Monitor alerts compared with pam_exec login notices
+| Question | SSH Monitor | pam_exec login notice |
+| --- | --- | --- |
+| What triggers an email? | Failed attempts since the last run reach the threshold | Every SSH session that opens |
+| When does it run? | On the cron schedule | During login |
+| Shows successful logins? | Last 5, inside a failure alert, with off-hours logins flagged | Each one, in its own email |
+| Shows failed logins? | Yes, grouped with counts | No |
+| Sends through | Forward Email API or sendmail | sendmail |
+
+Most servers benefit from both: per-login notices for accounts that should rarely log in, and SSH Monitor for a summary when [brute-force attempts](https://sshmonitor.com/ssh-brute-force-detection/) pile up.
+
+## How to Detect SSH Brute-Force Attempts
+
+> An SSH brute-force attempt shows up in your log as many Failed password or Invalid user lines from a few IP addresses. You can find them with grep, get an email with SSH Monitor and stop most of them with sshd settings.
+
+Source: https://sshmonitor.com/ssh-brute-force-detection/
+
+### What does an SSH brute-force attempt look like in the log?
+
+sshd writes one line per failed attempt. On Debian and Ubuntu these go to `/var/log/auth.log`. On Red Hat style systems they go to `/var/log/secure`. A password-guessing run looks like this:
+
+```text
+Mar  3 10:00:01 web-01 sshd[100]: Failed password for root from 203.0.113.5 port 50001 ssh2
+Mar  3 10:00:03 web-01 sshd[100]: Failed password for root from 203.0.113.5 port 50001 ssh2
+Mar  3 10:00:05 web-01 sshd[101]: Invalid user admin from 203.0.113.9 port 50002
+Mar  3 10:00:05 web-01 sshd[101]: Failed password for invalid user admin from 203.0.113.9 port 50002 ssh2
+```
+
+The signs are the same source address over and over, common user names such as `root`, `admin` or `ubuntu`, and attempts a few seconds apart. `Invalid user` means the name does not exist on your server.
+
+When password logins are off, the lines change. Bots then leave lines such as `Connection closed by invalid user admin 203.0.113.9 port 50002 [preauth]` or `Disconnected from authenticating user root ... [preauth]` instead of `Failed password`.
+
+### How do you find failed SSH logins?
+
+Count failed password lines in the current log:
+
+```bash
+sudo grep -c "Failed password" /var/log/auth.log
+```
+
+List the source addresses with the most failures:
+
+```bash
+sudo grep "Failed password" /var/log/auth.log | grep -oE "from [0-9a-fA-F:.]+" | sort | uniq -c | sort -rn | head
+```
+
+List the user names attackers tried that do not exist:
+
+```bash
+sudo grep "Invalid user" /var/log/auth.log | awk '{print $8}' | sort | uniq -c | sort -rn | head
+```
+
+On systems that log only to the systemd journal, read the sshd unit instead. The unit is `ssh` on Debian and Ubuntu and `sshd` on Red Hat style systems:
+
+```bash
+sudo journalctl -u ssh -u sshd --since "1 hour ago" | grep "Failed password"
+```
+
+### How does SSH Monitor detect brute-force attempts?
+
+SSH Monitor runs these searches for you on a schedule. Each run reads only the lines added since the last run, counts the failed attempts in them and, when the count reaches `FAILED_THRESHOLD` (5 by default), emails you the attempts grouped by source IP with the user names tried. After a sent alert it waits `LOCK_DURATION` seconds (3600 by default), and attempts from that wait go into the next alert. The [install guide](https://sshmonitor.com/install/) explains each setting.
+
+What that count means:
+
+- It is a rate: with a 10-minute cron schedule, 5 attempts within about 10 minutes trigger an alert.
+- It covers every line shown above: `Failed password`, `Failed publickey`, keyboard-interactive and PAM failures, `Invalid user` and connections closed before login.
+- One attempt counts once, even when sshd and PAM log two or three lines for it. The [FAQ](https://sshmonitor.com/faq/#which-failed-login-lines-does-it-count) explains the rule.
+- It does not block anything. It tells you, and you decide what to do.
+
+Because it also counts `Invalid user` and closed-before-login lines, the alert still works on servers that allow keys only.
+
+### How do you stop SSH brute-force attacks?
+
+The most effective step is to turn off password logins so guessing cannot work. Then cut the noise with sshd limits, a firewall and a blocker. Settings below come from the [sshd_config manual](https://man.openbsd.org/sshd_config).
+
+Table: sshd_config settings that stop password guessing
+| Setting in sshd_config | Default | Suggested | Effect |
+| --- | --- | --- | --- |
+| `PasswordAuthentication` | `yes` | `no` | Only key logins work, so passwords cannot be guessed |
+| `KbdInteractiveAuthentication` | `yes` | `no` | Closes the keyboard-interactive path that can also ask for a password |
+| `PermitRootLogin` | `prohibit-password` | `no` | Nobody can log in as root over SSH |
+| `MaxAuthTries` | `6` | `3` | Fewer attempts per connection |
+| `AllowUsers` | all users | your login users | Logins for any other name fail |
+
+Set up and test a key login before you set `PasswordAuthentication no`. Check the file with `sudo sshd -t`, then reload sshd (`sudo systemctl reload ssh` on Debian and Ubuntu, `sshd` on Red Hat style systems). Some distributions also read files in `/etc/ssh/sshd_config.d/`, which can override the main file.
+
+OpenSSH 9.8 and later penalize client addresses that fail to authenticate, and this is on by default ([OpenSSH 9.8 release notes](https://www.openssh.org/txt/release-9.8)). The `PerSourcePenalties` setting controls it.
+
+More layers that help:
+
+- **Firewall allowlist.** If you always connect from known networks, allow port 22 only from them with `ufw`, `firewalld` or `nftables`.
+- **Fail2Ban.** Reads the same log and bans addresses with too many failures by changing firewall rules. See [SSH Monitor vs Fail2Ban vs Logwatch](https://sshmonitor.com/fail2ban-vs-logwatch/).
+- **SSHGuard.** Reads system logs and blocks repeat offenders with one of several firewall backends ([sshguard.net](https://www.sshguard.net/)).
+- **CrowdSec.** Detects and blocks malicious IPs and can use a shared community blocklist ([CrowdSec repository](https://github.com/crowdsecurity/crowdsec)).
+
+### Does changing the SSH port help?
+
+Moving SSH off port 22 cuts the number of log lines from scanners that only try the default port. It does not stop anyone who scans all ports. Treat it as a way to quiet the log, and rely on key-only logins for security.
+
+## SSH Monitor vs Fail2Ban vs Logwatch
+
+> These three tools solve different problems. Fail2Ban blocks IP addresses, Logwatch writes a summary report of many system logs, and SSH Monitor sends an email when failed SSH logins pass a threshold.
+
+Source: https://sshmonitor.com/fail2ban-vs-logwatch/
+
+### What is the difference between Fail2Ban, Logwatch and SSH Monitor?
+
+All three read log files, so they get compared, but they do different jobs.
+
+Table: Fail2Ban, Logwatch and SSH Monitor compared
+| Feature | Fail2Ban | Logwatch | SSH Monitor |
+| --- | --- | --- | --- |
+| Main job | Ban IP addresses that fail too often | Summarize many logs in one report | Email an alert when failed SSH logins pass a threshold |
+| Changes firewall rules | Yes | No | No |
+| Sends email | Optional, with the `action_mw` or `action_mwl` actions | Yes, with `--output mail` | Yes, every alert |
+| What it reads | Logs for each enabled jail (sshd, web servers and more) | Many system logs through service filters | The SSH log file or the systemd journal, new lines only |
+| When it runs | As a daemon, all the time | When you run it, for a date range such as yesterday | From cron, every 10 minutes in the example setup |
+| Setup size | Package plus a `jail.local` file | Package plus options | One Bash script |
+
+### What does Fail2Ban do?
+
+Fail2Ban scans log files such as `/var/log/auth.log` and bans IP addresses with too many failed logins by updating firewall rules for a set time ([Fail2Ban README](https://github.com/fail2ban/fail2ban)). In the stock `jail.conf`, a host is banned after `maxretry = 5` failures within `findtime = 10m`, for `bantime = 10m`.
+
+All jails are off by default, including `sshd`. You turn the SSH jail on in `/etc/fail2ban/jail.local`:
+
+```text
+[sshd]
+enabled = true
+```
+
+Fail2Ban can email you on each ban. The `action_mw` action bans and sends a whois report to `destemail`, and `action_mwl` adds the matching log lines. It sends through `sendmail` by default, so the same msmtp setup from the [install guide](https://sshmonitor.com/install/) works for it.
+
+### What does Logwatch do?
+
+Logwatch is a customizable log analysis system. It parses your system logs and creates a report on the areas you choose ([Logwatch on SourceForge](https://sourceforge.net/projects/logwatch/)). You pick a date range such as `yesterday` or `today`, and `--output mail --mailto you@example.com` sends the report by email.
+
+A Logwatch report covers far more than SSH: disk space, package changes, mail server activity and other services, depending on what is installed. It is a daily read, not an alarm.
+
+### What does SSH Monitor do?
+
+SSH Monitor is one Bash script. Each cron run reads the lines added to your SSH log since the last run, counts the failed attempts, and when the count reaches `FAILED_THRESHOLD` it sends one HTML email with the attempts by source IP and the last 5 successful logins, then waits `LOCK_DURATION` seconds before it can send another. It sends through the Forward Email API or `sendmail`. It does not block anything. The [home page](https://sshmonitor.com/) lists everything it does and does not do.
+
+### Which one should you use?
+
+- **You want attackers blocked.** Use Fail2Ban, SSHGuard or CrowdSec, and turn off password logins.
+- **You want one daily summary of your whole server.** Use Logwatch.
+- **You want an email when SSH failures pile up, with no daemon and nothing to learn.** Use SSH Monitor.
+- **You want an email for every successful login.** Use a PAM hook. See [SSH login alerts by email](https://sshmonitor.com/ssh-login-alerts/).
+
+### Can you run them together?
+
+Yes. They read the same logs and do not conflict. A common setup is Fail2Ban to ban addresses and an email alert so you know an attack is going on.
+
+When Fail2Ban bans an address, that address stops reaching sshd, so it stops adding failed-login lines. SSH Monitor still reports the attempts made before the ban, so you see what Fail2Ban reacted to.
+
+### Other tools you may see compared
+
+- **SSHGuard** protects hosts from brute-force attacks against SSH and other services by reading system logs and blocking repeat offenders ([sshguard.net](https://www.sshguard.net/)).
+- **CrowdSec** detects and blocks malicious IPs and shares a community blocklist ([CrowdSec repository](https://github.com/crowdsecurity/crowdsec)).
+- **OSSEC** is a host-based intrusion detection system that does log analysis, file integrity checking, rootkit detection, alerting and active response ([OSSEC repository](https://github.com/ossec/ossec-hids)).
+
+## SSH Monitor FAQ
+
+> Short answers about what ssh_monitor.sh does, where it works and how to tune its alerts.
+
+Source: https://sshmonitor.com/faq/
+
+### What is SSH Monitor?
+
+SSH Monitor is a free Bash script, `ssh_monitor.sh`, from the Forward Email team. You run it from cron on a Linux server. Each run reads the new lines in your SSH log, counts failed login attempts and emails you a report through the Forward Email API or `sendmail` when the count reaches a threshold.
+
+### Is SSH Monitor free?
+
+Yes. The script costs nothing and the source is in the [sshmonitor.com repository](https://github.com/forwardemail/sshmonitor.com). Sending the alert through the Forward Email API or SMTP needs a paid Forward Email plan with outbound SMTP set up. If you send through your own mail server with `sendmail`, you need no Forward Email plan.
+
+### Does SSH Monitor block attackers?
+
+No. It only sends alerts. To block addresses, use Fail2Ban, SSHGuard or CrowdSec and turn off password logins. See [SSH Monitor vs Fail2Ban vs Logwatch](https://sshmonitor.com/fail2ban-vs-logwatch/).
+
+### Does it send an email for every SSH login?
+
+No. An email goes out only when failed attempts in the new log lines reach `FAILED_THRESHOLD`. Each alert lists the last 5 successful logins from those lines and flags any outside business hours. For a notice on every login, use the `pam_exec` setup in [SSH login alerts by email](https://sshmonitor.com/ssh-login-alerts/).
+
+### Is SSH Monitor real time?
+
+No. It runs when cron runs it. With the example schedule of every 10 minutes, you hear about a burst of failures within about 10 minutes, unless an alert already went out in the last `LOCK_DURATION` seconds.
+
+### Which Linux distributions does it work on?
+
+It works on Linux without changes. It reads `/var/log/auth.log` (Debian, Ubuntu) if it exists, then `/var/log/secure` (RHEL, CentOS, Rocky, AlmaLinux, Fedora), then the systemd journal. It reads classic syslog timestamps and ISO 8601 timestamps, and lines from both `sshd` and `sshd-session`. It does not run unchanged on macOS or BSD because it uses GNU `stat -c`.
+
+### Does it work with the systemd journal?
+
+Yes. When no log file exists, as on a fresh Debian 12 install, the script runs `journalctl -u ssh -u sshd` and saves the journal cursor in `/var/lib/ssh_monitor/journal.cursor`. Later runs read only entries after that cursor. The first run reads the last 24 hours (`JOURNAL_SINCE`).
+
+### How often can you get an alert?
+
+At most once per `LOCK_DURATION` (3600 seconds by default), and only when the lines added since the last run hold at least `FAILED_THRESHOLD` failed attempts. Old failures are never reported twice, because the script saves its read position after each run. Attempts that arrive during the cooldown are kept and sent with the next alert.
+
+### What happens when the log rotates?
+
+The script saves the log file's inode and byte offset. If the inode changes, it reads the rest of the old file (now `auth.log.1`) from the saved offset and then the whole new file. If the file shrank, for example after a copytruncate rotation, it reads the file from the start.
+
+### What happens if sending fails?
+
+The run log gets an `Alert email via API failed` (or SMTP) line. The script does not start the cooldown and does not move its read position, so the next run sends the same attempts again, plus any new ones.
+
+### Which failed login lines does it count?
+
+`Failed password`, `Failed publickey`, `Failed keyboard-interactive/pam` and other `Failed <method>` lines, PAM `authentication failure` lines, `Invalid user`, and `Connection closed by` or `Disconnected from` an authenticating or invalid user before login. sshd and PAM often log two or three of these for one attempt, so the script groups lines by sshd process and counts each attempt once:
+
+1. Each `Failed <method>` line counts as one attempt.
+2. If a connection has none, each PAM `authentication failure` line counts.
+3. If it has neither, one `Invalid user` or closed-before-login line counts once for the connection.
+
+rsyslog lines such as `message repeated 2 times: [ Failed password ... ]` count as 2. This means key-only servers still alert on bots that try user names and disconnect.
+
+### Do you need a Forward Email account?
+
+You need one to send with the Forward Email API, which is the default. You need an API token, a domain with outbound SMTP set up, and a `from` address that is an alias of that domain. To receive alerts at a domain that uses Forward Email for forwarding, the free plan works without an account: you set MX and TXT DNS records.
+
+### Can you use another email provider?
+
+Yes, with the `sendmail` path. Set `SEND_METHOD="smtp"` and configure an MTA such as msmtp or Postfix to relay through your provider's SMTP server. The API path is specific to the Forward Email API.
+
+### Where is the API key stored?
+
+In plain text in the `FORWARD_EMAIL_API_KEY` variable at the top of the script. Keep the file owned by root with mode 700 (`sudo chmod 700 /usr/local/bin/ssh_monitor.sh`) so other users cannot read it.
+
+### What does the off-hours warning mean?
+
+If a successful login in the new lines has a log time before 08:00 or after 18:59, the email lists it under a warning. The check uses each login's own timestamp in server time. Change the hours with `BUSINESS_HOURS_START` and `BUSINESS_HOURS_END`. An off-hours login appears in an alert that failed attempts triggered; on its own it does not send an email.
+
+### How do you change the threshold or the cooldown?
+
+Edit `FAILED_THRESHOLD` (default 5, counted in the lines added since the last run) and `LOCK_DURATION` in seconds (default 3600) at the top of the script. The [install guide](https://sshmonitor.com/install/) lists every setting.
+
+### What data does the script send?
+
+Only the email itself: your server's host name, the time, the failed-attempt counts by source IP with the user names tried, recent successful logins (time, user, IP address and method) and the warnings. It goes to the Forward Email API or your `sendmail` relay and then to `EMAIL_TO`. The script sends nothing anywhere else.
+
+### How do you report a bug or a security issue?
+
+Open a [GitHub issue](https://github.com/forwardemail/sshmonitor.com/issues). Report a security problem privately by email to security@forwardemail.net, as the [Forward Email security policy](https://forwardemail.net/en/security) and `https://sshmonitor.com/.well-known/security.txt` describe.
+
+## About SSH Monitor
+
+> SSH Monitor is a free script and guide site from the Forward Email team. This page covers who we are, how to reach us and what the site collects.
+
+Source: https://sshmonitor.com/about/
+
+### Who makes SSH Monitor?
+
+The [Forward Email](https://forwardemail.net) team makes SSH Monitor. Forward Email is an open-source email service. Its full source is public at [github.com/forwardemail/forwardemail.net](https://github.com/forwardemail/forwardemail.net), and you can self-host it with Docker. It supports IMAP, POP3, SMTP, CalDAV and CardDAV, and its free plan forwards email for your domain once you set MX and TXT DNS records, with no account needed. The founder was one of the first employees at DuckDuckGo.
+
+### What is the relationship between SSH Monitor and Forward Email?
+
+The script sends its alerts through the [Forward Email API](https://forwardemail.net/en/email-api) by default, so it is also an example of what you can do with that API. You can switch it to `sendmail` and use any mail server. Links on this site to forwardemail.net point to the product, its pricing and its documentation.
+
+### How do you contact the team?
+
+- **Questions and bugs:** open an issue in the [sshmonitor.com repository](https://github.com/forwardemail/sshmonitor.com/issues).
+- **Security reports:** email security@forwardemail.net, as the [Forward Email security policy](https://forwardemail.net/en/security) and `https://sshmonitor.com/.well-known/security.txt` describe. Do not post them in public issues.
+- **Forward Email support:** see the [Forward Email FAQ](https://forwardemail.net/en/faq).
+
+### Where is the source code?
+
+Both the script and this site live in [github.com/forwardemail/sshmonitor.com](https://github.com/forwardemail/sshmonitor.com). The script is [ssh_monitor.sh](https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh). Every page has an "Edit this page on GitHub" link, and pull requests are welcome.
+
+### Privacy note
+
+This site sets no cookies and runs no JavaScript, analytics or tracking. Pages load no fonts, scripts or images from other domains, so your browser only talks to sshmonitor.com.
+
+Requests to sshmonitor.com pass through Cloudflare, which runs as a CDN and proxy in front of GitHub Pages and processes the IP address of each visitor ([Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/)). GitHub Pages hosts the files and logs the IP address of each visitor for security purposes ([GitHub Pages documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages)).
+
+The script runs on your server and sends data only in the alert email you configure: your host name, the time, failed-attempt counts with IP addresses and user names, and recent logins. It also keeps its read position in `/var/lib/ssh_monitor` on your server. See the [FAQ](https://sshmonitor.com/faq/) for details.
+
+### How is this site built?
+
+Every page is static HTML in the repository, served by GitHub Pages. The page text lives in Markdown files under `src/pages/`, and a small Node script with no dependencies, `scripts/build.js`, turns them into HTML. The same script writes the Markdown copy of each page (for example `/install/index.md`), the sitemap and the `llms.txt` files for AI tools. To change a page, edit its Markdown file, run `node scripts/build.js` and commit the result.
+
+The pages load one stylesheet and no JavaScript, so they work in any browser and with any crawler.
+
+### How does this site check its facts?
+
+Descriptions of the script come from reading its source. Facts about other tools link to their own documentation, such as the [sshd_config manual](https://man.openbsd.org/sshd_config) and the [Fail2Ban README](https://github.com/fail2ban/fail2ban). If you find a mistake, [open an issue](https://github.com/forwardemail/sshmonitor.com/issues) and it will be fixed.
+
+## Script source: ssh_monitor.sh
+
+```bash
+#!/bin/bash
+# SSH Monitor Script
+# This script monitors SSH login attempts and sends alerts via Forward Email
+# Usage: Place in /usr/local/bin/ and add to crontab to run periodically
+# Example crontab entry: */10 * * * * /usr/local/bin/ssh_monitor.sh
+# Docs: https://sshmonitor.com/install/
+#
+# Each run reads only the log lines added since the previous run, counts the
+# failed SSH login attempts in them and sends one email when the count
+# reaches FAILED_THRESHOLD.
+
+# Configuration
+EMAIL_TO="admin@yourdomain.com"
+EMAIL_FROM="ssh-alerts@yourdomain.com"
+FORWARD_EMAIL_API_KEY="your_api_key_here" # Get from https://forwardemail.net/my-account/security
+SEND_METHOD="api" # "api" for the Forward Email API, "smtp" for the local sendmail command
+LOG_FILE="/var/log/auth.log" # If missing, /var/log/secure and then the systemd journal are used
+FAILED_THRESHOLD=5 # Failed attempts in the new log lines that trigger an alert
+ALERT_LOCKFILE="/tmp/ssh_monitor_alert.lock"
+LOCK_DURATION=3600 # Don't send another alert for this many seconds
+STATE_DIR="/var/lib/ssh_monitor" # Remembers how far the log has been read
+RUN_LOG="/var/log/ssh_monitor.log" # One line per run
+BUSINESS_HOURS_START=8 # Logins before 08:00 ...
+BUSINESS_HOURS_END=18  # ... or after 18:59 get an off-hours warning
+JOURNAL_SINCE="24 hours ago" # How far back the first journal read goes
+
+POSITION_FILE="$STATE_DIR/position"     # "<inode> <byte offset>" of the log file
+CURSOR_FILE="$STATE_DIR/journal.cursor" # journalctl cursor
+
+mkdir -p "$STATE_DIR"
+
+log_run() {
+    echo "$1" >> "$RUN_LOG"
+}
+
+# Escape text from the log before it goes into the HTML email
+html_escape() {
+    sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
+# Function to send email via Forward Email HTTP API
+# Returns non-zero if the API call fails
+send_email_api() {
+    local subject="$1"
+    local body="$2"
+
+    local text
+    # Plain text version of the report (HTML tags removed, entities decoded)
+    text=$(echo "$body" | sed -e 's/<[^>]*>//g' -e 's/&lt;/</g' -e 's/&gt;/>/g' -e 's/&amp;/\&/g')
+
+    # Form-encode every field so newlines and quotes in the report are sent safely
+    if curl -sS --fail -X POST "https://api.forwardemail.net/v1/emails" \
+      -u "$FORWARD_EMAIL_API_KEY:" \
+      --data-urlencode "from=$EMAIL_FROM" \
+      --data-urlencode "to=$EMAIL_TO" \
+      --data-urlencode "subject=$subject" \
+      --data-urlencode "html=$body" \
+      --data-urlencode "text=$text" \
+      -o /dev/null; then
+        log_run "Alert email sent via API at $(date)"
+        return 0
+    fi
+    log_run "Alert email via API failed at $(date)"
+    return 1
+}
+
+# Function to send email via sendmail (SMTP)
+# Returns non-zero if sendmail fails
+send_email_smtp() {
+    local subject="$1"
+    local body="$2"
+
+    # printf, not echo -e, so backslashes in log text are not interpreted
+    if printf 'Subject: %s\nFrom: %s\nTo: %s\nMIME-Version: 1.0\nContent-Type: text/html; charset=UTF-8\n\n%s\n' \
+        "$subject" "$EMAIL_FROM" "$EMAIL_TO" "$body" | sendmail -t; then
+        log_run "Alert email sent via SMTP at $(date)"
+        return 0
+    fi
+    log_run "Alert email via SMTP failed at $(date)"
+    return 1
+}
+
+send_alert() {
+    if [ "$SEND_METHOD" = "smtp" ]; then
+        send_email_smtp "$1" "$2"
+    else
+        send_email_api "$1" "$2"
+    fi
+}
+
+# Check that the cooldown after the last sent alert is over
+should_send_alert() {
+    if [ -f "$ALERT_LOCKFILE" ]; then
+        lockfile_time=$(stat -c %Y "$ALERT_LOCKFILE")
+        current_time=$(date +%s)
+        elapsed_time=$((current_time - lockfile_time))
+
+        if [ $elapsed_time -lt "$LOCK_DURATION" ]; then
+            return 1 # Still in cooldown
+        fi
+    fi
+    return 0
+}
+
+# ---------------------------------------------------------------------------
+# Read the new log lines
+# ---------------------------------------------------------------------------
+
+# Pick the source: LOG_FILE, then /var/log/secure (RHEL, Rocky, AlmaLinux,
+# Fedora), then the systemd journal.
+if [ -f "$LOG_FILE" ]; then
+    SOURCE="file"
+elif [ -f /var/log/secure ]; then
+    LOG_FILE="/var/log/secure"
+    SOURCE="file"
+elif command -v journalctl > /dev/null 2>&1; then
+    SOURCE="journal"
+else
+    log_run "SSH Monitor at $(date): no SSH log found ($LOG_FILE, /var/log/secure or journalctl)"
+    exit 1
+fi
+
+NEW_POSITION=""
+NEW_CURSOR=""
+
+if [ "$SOURCE" = "file" ]; then
+    SOURCE_NAME="$LOG_FILE"
+    read -r current_inode current_size < <(stat -c '%i %s' "$LOG_FILE")
+    saved_inode=""
+    saved_offset=0
+    if [ -f "$POSITION_FILE" ]; then
+        read -r saved_inode saved_offset < "$POSITION_FILE"
+    fi
+    saved_offset=${saved_offset:-0}
+
+    if [ "$saved_inode" = "$current_inode" ] && [ "$saved_offset" -le "$current_size" ]; then
+        # Same file: read only the bytes added since the last run
+        NEW_LINES=$(tail -c +"$((saved_offset + 1))" "$LOG_FILE" | head -c "$((current_size - saved_offset))")
+    else
+        # First run, or the file was rotated or truncated: read the whole
+        # current file. After a rotation, first read what was added to the
+        # old file (now LOG_FILE.1) after the last run.
+        NEW_LINES=""
+        if [ -n "$saved_inode" ] && [ -f "$LOG_FILE.1" ] && \
+           [ "$(stat -c %i "$LOG_FILE.1")" = "$saved_inode" ]; then
+            NEW_LINES="$(tail -c +"$((saved_offset + 1))" "$LOG_FILE.1")"$'\n'
+        fi
+        NEW_LINES+=$(head -c "$current_size" "$LOG_FILE")
+    fi
+    NEW_POSITION="$current_inode $current_size"
+else
+    SOURCE_NAME="systemd journal (ssh and sshd units)"
+    if [ -s "$CURSOR_FILE" ]; then
+        JOURNAL_OUTPUT=$(journalctl -u ssh -u sshd --no-pager -o short-iso --show-cursor \
+            --after-cursor "$(cat "$CURSOR_FILE")" 2>/dev/null)
+    else
+        JOURNAL_OUTPUT=$(journalctl -u ssh -u sshd --no-pager -o short-iso --show-cursor \
+            --since "$JOURNAL_SINCE" 2>/dev/null)
+    fi
+    NEW_CURSOR=$(echo "$JOURNAL_OUTPUT" | sed -n 's/^-- cursor: //p' | tail -n 1)
+    NEW_LINES=$(echo "$JOURNAL_OUTPUT" | grep -v '^-- ')
+fi
+
+# ---------------------------------------------------------------------------
+# Parse the new lines
+# ---------------------------------------------------------------------------
+# Output, one event per line:  F|time|ip|user|what     (failed attempt)
+#                               A|time|ip|user|method   (successful login)
+# "time" is "YYYY-MM-DD HH:MM:SS" so events sort by time.
+#
+# Counting rule, so that one attempt is counted once: sshd and PAM can log
+# several lines for a single attempt, for example "Invalid user", a PAM
+# "authentication failure" and "Failed password". Lines are grouped by sshd
+# process ID (one process per connection), and for each connection:
+#   1. every "Failed <method> for ..." line counts as one attempt
+#      (password, publickey, keyboard-interactive/pam and others);
+#   2. if there are none, every PAM "authentication failure" line counts;
+#   3. if there are none of those either, one "Invalid user",
+#      "Connection closed by authenticating|invalid user ... [preauth]" or
+#      "Disconnected from authenticating|invalid user ... [preauth]" line
+#      counts as one attempt for the whole connection.
+# rsyslog "message repeated N times: [ Failed ... ]" lines count N times.
+parse_lines() {
+    awk -v cur_year="$(date +%Y)" -v cur_month="$(date +%-m)" '
+    BEGIN {
+        split("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec", names, " ")
+        for (i = 1; i <= 12; i++) month[names[i]] = i
+    }
+    # The field after the first field equal to "word", from field "start"
+    function after(word, start,   i) {
+        for (i = start; i < NF; i++) if ($i == word) return $(i + 1)
+        return ""
+    }
+    # "<Failed|Accepted> <method> for [invalid user] USER from IP"
+    function parse_for(i,   j) {
+        method = $(i + 1)
+        j = i + 2
+        if ($j != "for") return 0
+        j++
+        if ($j == "invalid" && $(j + 1) == "user") j += 2
+        user = $j
+        ip = after("from", j)
+        return 1
+    }
+    {
+        # Timestamp: ISO 8601 (rsyslog high precision, journalctl short-iso)
+        # or classic syslog ("Mar  3 10:00:01", year taken from today)
+        if ($1 ~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T/) {
+            ts = substr($1, 1, 10) " " substr($1, 12, 8)
+            prog = $3; first = 4
+        } else if ($1 in month) {
+            m = month[$1]
+            y = (m > cur_month) ? cur_year - 1 : cur_year
+            ts = sprintf("%04d-%02d-%02d %s", y, m, $2, $3)
+            prog = $5; first = 6
+        } else next
+
+        if (prog !~ /^sshd/) next
+        pid = prog
+        gsub(/[^0-9]/, "", pid)
+        repeat = 1
+        if ($first == "message" && $(first + 1) == "repeated") {
+            repeat = $(first + 2) + 0
+            first += 5
+        }
+        msg = $first
+        user = ""; ip = ""; method = ""
+
+        if (msg == "Failed") {
+            if (!parse_for(first)) next
+            for (r = 0; r < repeat; r++)
+                failed[pid] = failed[pid] "F|" ts "|" ip "|" user "|failed " method "\n"
+        } else if (msg == "Accepted") {
+            if (!parse_for(first)) next
+            print "A|" ts "|" ip "|" user "|" method
+        } else if (index($0, "): authentication failure;")) {
+            for (i = first; i <= NF; i++) {
+                if ($i ~ /^rhost=/) ip = substr($i, 7)
+                if ($i ~ /^user=/) user = substr($i, 6)
+            }
+            pam[pid] = pam[pid] "F|" ts "|" ip "|" user "|PAM authentication failure\n"
+        } else if (msg == "Invalid" && $(first + 1) == "user") {
+            # "Invalid user NAME from IP port N" (NAME can be empty)
+            user = ($(first + 2) == "from") ? "" : $(first + 2)
+            ip = after("from", first)
+            if (!(pid in other)) other[pid] = "F|" ts "|" ip "|" user "|invalid user\n"
+        } else if (/\[preauth\]/ && (/Connection closed by (authenticating|invalid) user / || \
+                                     /Disconnected from (authenticating|invalid) user /)) {
+            # "... authenticating user NAME IP port N [preauth]"
+            for (i = first; i < NF; i++) if ($i == "user") break
+            user = $(i + 1); ip = $(i + 2)
+            if (!(pid in other)) other[pid] = "F|" ts "|" ip "|" user "|closed before login\n"
+        }
+    }
+    END {
+        for (p in failed) printf "%s", failed[p]
+        for (p in pam) if (!(p in failed)) printf "%s", pam[p]
+        for (p in other) if (!(p in failed) && !(p in pam)) printf "%s", other[p]
+    }'
+}
+
+EVENTS=$(printf '%s\n' "$NEW_LINES" | parse_lines | sort -t '|' -k2,2)
+FAILED_EVENTS=$(printf '%s\n' "$EVENTS" | grep '^F|')
+LOGIN_EVENTS=$(printf '%s\n' "$EVENTS" | grep '^A|')
+FAILED_COUNT=$(printf '%s' "$FAILED_EVENTS" | grep -c .)
+
+# Failed attempts grouped by source IP: count, IP, user names tried
+FAILED_ATTEMPTS=$(printf '%s\n' "$FAILED_EVENTS" | awk -F'|' 'NF >= 4 {
+        ip = ($3 == "") ? "unknown" : $3
+        n[ip]++
+        if ($4 != "" && index(" " users[ip] " ", " " $4 " ") == 0) users[ip] = users[ip] " " $4
+    }
+    END { for (ip in n) printf "%7d  %-39s %s\n", n[ip], ip, substr(users[ip], 2) }' | sort -nr | html_escape)
+
+# Last 5 successful logins, oldest first: time, user, IP, method
+SUCCESSFUL_LOGINS=$(printf '%s\n' "$LOGIN_EVENTS" | \
+    awk -F'|' 'NF >= 5 { print $2 "  " $4 "  " $3 "  " $5 }' | tail -n 5 | html_escape)
+
+# Successful logins outside business hours, using each login's own time
+OFF_HOURS_LOGINS=$(printf '%s\n' "$LOGIN_EVENTS" | \
+    awk -F'|' -v start="$BUSINESS_HOURS_START" -v end="$BUSINESS_HOURS_END" 'NF >= 5 {
+        hour = substr($2, 12, 2) + 0
+        if (hour < start || hour > end) print $2 "  " $4 "  " $3
+    }' | html_escape)
+
+# ---------------------------------------------------------------------------
+# Build and send the alert
+# ---------------------------------------------------------------------------
+
+# Get hostname for the alert
+HOSTNAME=$(hostname)
+
+# Prepare email content with HTML formatting
+EMAIL_SUBJECT="SSH Security Alert: $HOSTNAME - $(date +%Y-%m-%d)"
+EMAIL_BODY="<h2>SSH Security Monitoring Alert</h2>
+<p><strong>Server:</strong> $HOSTNAME</p>
+<p><strong>Time:</strong> $(date)</p>
+<p><strong>Source:</strong> $SOURCE_NAME (new lines since the last check)</p>
+
+<h3>Failed Login Attempts: $FAILED_COUNT</h3>
+<pre>  Count  Source IP                               User names tried
+$FAILED_ATTEMPTS</pre>
+
+<h3>Successful Logins (last 5):</h3>
+<pre>${SUCCESSFUL_LOGINS:-None}</pre>
+
+<p>This is an automated alert from your SSH monitoring system.</p>"
+
+# Add warning for logins outside business hours
+if [ -n "$OFF_HOURS_LOGINS" ]; then
+    EMAIL_BODY="$EMAIL_BODY
+<p style='color: red;'><strong>WARNING:</strong> Successful logins outside business hours ($(printf '%02d' "$BUSINESS_HOURS_START"):00 to $(printf '%02d' "$BUSINESS_HOURS_END"):59):</p>
+<pre>$OFF_HOURS_LOGINS</pre>"
+fi
+
+# Save the read position unless these lines still need to be reported
+SAVE_POSITION=true
+
+if [ "$FAILED_COUNT" -ge "$FAILED_THRESHOLD" ]; then
+    EMAIL_BODY="$EMAIL_BODY
+<p style='color: red;'><strong>WARNING:</strong> High number of failed login attempts detected!</p>"
+
+    if ! should_send_alert; then
+        SAVE_POSITION=false # In cooldown: include these lines in the next alert
+    elif send_alert "$EMAIL_SUBJECT" "$EMAIL_BODY"; then
+        touch "$ALERT_LOCKFILE" # Start the cooldown only after a successful send
+    else
+        SAVE_POSITION=false # Send failed: retry with the same lines on the next run
+    fi
+fi
+
+if [ "$SAVE_POSITION" = true ]; then
+    if [ -n "$NEW_POSITION" ]; then
+        echo "$NEW_POSITION" > "$POSITION_FILE"
+    fi
+    if [ -n "$NEW_CURSOR" ]; then
+        echo "$NEW_CURSOR" > "$CURSOR_FILE"
+    fi
+fi
+
+# Always log activity summary
+log_run "SSH Monitor ran at $(date) - Found $FAILED_COUNT failed attempts in $SOURCE_NAME"
+
+exit 0
+```

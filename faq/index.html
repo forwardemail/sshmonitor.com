@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>SSH Monitor FAQ: Alerts, Limits, Providers and Setup</title>
+<meta name="description" content="Answers about SSH Monitor: cost, blocking, per-login alerts, Linux and journald support, alert frequency, retries and API keys.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://sshmonitor.com/faq/">
+<link rel="alternate" type="text/markdown" href="/faq/index.md" title="SSH Monitor FAQ (Markdown)">
+<meta name="theme-color" content="#1a365d">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/images/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
+<link rel="stylesheet" href="/css/style.min.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SSH Monitor">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="SSH Monitor FAQ: Alerts, Limits, Providers and Setup">
+<meta property="og:description" content="Answers about SSH Monitor: cost, blocking, per-login alerts, Linux and journald support, alert frequency, retries and API keys.">
+<meta property="og:url" content="https://sshmonitor.com/faq/">
+<meta property="og:image" content="https://sshmonitor.com/images/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@fwdemail">
+<meta name="twitter:title" content="SSH Monitor FAQ: Alerts, Limits, Providers and Setup">
+<meta name="twitter:description" content="Answers about SSH Monitor: cost, blocking, per-login alerts, Linux and journald support, alert frequency, retries and API keys.">
+<meta name="twitter:image" content="https://sshmonitor.com/images/og-image.png">
+<meta name="twitter:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://forwardemail.net/#organization","name":"Forward Email","url":"https://forwardemail.net","logo":"https://forwardemail.net/img/logo-square-180x180.png","sameAs":["https://github.com/forwardemail","https://x.com/fwdemail","https://www.youtube.com/forwardemail","https://www.reddit.com/r/forwardemail/"],"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","email":"support@forwardemail.net","url":"https://forwardemail.net/en/faq"},{"@type":"ContactPoint","contactType":"security","email":"security@forwardemail.net","url":"https://forwardemail.net/en/security"}]},{"@type":"WebSite","@id":"https://sshmonitor.com/#website","url":"https://sshmonitor.com/","name":"SSH Monitor","description":"SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report through Forward Email when they pass a threshold.","inLanguage":"en","publisher":{"@id":"https://forwardemail.net/#organization"}},{"@type":"FAQPage","@id":"https://sshmonitor.com/faq/#webpage","url":"https://sshmonitor.com/faq/","name":"SSH Monitor FAQ","description":"Answers about SSH Monitor: cost, blocking, per-login alerts, Linux and journald support, alert frequency, retries and API keys.","inLanguage":"en","isPartOf":{"@id":"https://sshmonitor.com/#website"},"publisher":{"@id":"https://forwardemail.net/#organization"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://sshmonitor.com/images/og-image.png","width":1200,"height":630},"breadcrumb":{"@id":"https://sshmonitor.com/faq/#breadcrumb"},"mainEntity":[{"@type":"Question","name":"What is SSH Monitor?","acceptedAnswer":{"@type":"Answer","text":"SSH Monitor is a free Bash script, ssh_monitor.sh, from the Forward Email team. You run it from cron on a Linux server. Each run reads the new lines in your SSH log, counts failed login attempts and emails you a report through the Forward Email API or sendmail when the count reaches a threshold."}},{"@type":"Question","name":"Is SSH Monitor free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The script costs nothing and the source is in the sshmonitor.com repository. Sending the alert through the Forward Email API or SMTP needs a paid Forward Email plan with outbound SMTP set up. If you send through your own mail server with sendmail, you need no Forward Email plan."}},{"@type":"Question","name":"Does SSH Monitor block attackers?","acceptedAnswer":{"@type":"Answer","text":"No. It only sends alerts. To block addresses, use Fail2Ban, SSHGuard or CrowdSec and turn off password logins. See SSH Monitor vs Fail2Ban vs Logwatch."}},{"@type":"Question","name":"Does it send an email for every SSH login?","acceptedAnswer":{"@type":"Answer","text":"No. An email goes out only when failed attempts in the new log lines reach FAILED_THRESHOLD. Each alert lists the last 5 successful logins from those lines and flags any outside business hours. For a notice on every login, use the pam_exec setup in SSH login alerts by email."}},{"@type":"Question","name":"Is SSH Monitor real time?","acceptedAnswer":{"@type":"Answer","text":"No. It runs when cron runs it. With the example schedule of every 10 minutes, you hear about a burst of failures within about 10 minutes, unless an alert already went out in the last LOCK_DURATION seconds."}},{"@type":"Question","name":"Which Linux distributions does it work on?","acceptedAnswer":{"@type":"Answer","text":"It works on Linux without changes. It reads /var/log/auth.log (Debian, Ubuntu) if it exists, then /var/log/secure (RHEL, CentOS, Rocky, AlmaLinux, Fedora), then the systemd journal. It reads classic syslog timestamps and ISO 8601 timestamps, and lines from both sshd and sshd-session. It does not run unchanged on macOS or BSD because it uses GNU stat -c."}},{"@type":"Question","name":"Does it work with the systemd journal?","acceptedAnswer":{"@type":"Answer","text":"Yes. When no log file exists, as on a fresh Debian 12 install, the script runs journalctl -u ssh -u sshd and saves the journal cursor in /var/lib/ssh_monitor/journal.cursor. Later runs read only entries after that cursor. The first run reads the last 24 hours (JOURNAL_SINCE)."}},{"@type":"Question","name":"How often can you get an alert?","acceptedAnswer":{"@type":"Answer","text":"At most once per LOCK_DURATION (3600 seconds by default), and only when the lines added since the last run hold at least FAILED_THRESHOLD failed attempts. Old failures are never reported twice, because the script saves its read position after each run. Attempts that arrive during the cooldown are kept and sent with the next alert."}},{"@type":"Question","name":"What happens when the log rotates?","acceptedAnswer":{"@type":"Answer","text":"The script saves the log file's inode and byte offset. If the inode changes, it reads the rest of the old file (now auth.log.1) from the saved offset and then the whole new file. If the file shrank, for example after a copytruncate rotation, it reads the file from the start."}},{"@type":"Question","name":"What happens if sending fails?","acceptedAnswer":{"@type":"Answer","text":"The run log gets an Alert email via API failed (or SMTP) line. The script does not start the cooldown and does not move its read position, so the next run sends the same attempts again, plus any new ones."}},{"@type":"Question","name":"Which failed login lines does it count?","acceptedAnswer":{"@type":"Answer","text":"Failed password, Failed publickey, Failed keyboard-interactive/pam and other Failed \u003cmethod> lines, PAM authentication failure lines, Invalid user, and Connection closed by or Disconnected from an authenticating or invalid user before login. sshd and PAM often log two or three of these for one attempt, so the script groups lines by sshd process and counts each attempt once:\n\n- Each Failed \u003cmethod> line counts as one attempt.\n- If a connection has none, each PAM authentication failure line counts.\n- If it has neither, one Invalid user or closed-before-login line counts once for the connection.\n\nrsyslog lines such as message repeated 2 times: [ Failed password ... ] count as 2. This means key-only servers still alert on bots that try user names and disconnect."}},{"@type":"Question","name":"Do you need a Forward Email account?","acceptedAnswer":{"@type":"Answer","text":"You need one to send with the Forward Email API, which is the default. You need an API token, a domain with outbound SMTP set up, and a from address that is an alias of that domain. To receive alerts at a domain that uses Forward Email for forwarding, the free plan works without an account: you set MX and TXT DNS records."}},{"@type":"Question","name":"Can you use another email provider?","acceptedAnswer":{"@type":"Answer","text":"Yes, with the sendmail path. Set SEND_METHOD=\"smtp\" and configure an MTA such as msmtp or Postfix to relay through your provider's SMTP server. The API path is specific to the Forward Email API."}},{"@type":"Question","name":"Where is the API key stored?","acceptedAnswer":{"@type":"Answer","text":"In plain text in the FORWARD_EMAIL_API_KEY variable at the top of the script. Keep the file owned by root with mode 700 (sudo chmod 700 /usr/local/bin/ssh_monitor.sh) so other users cannot read it."}},{"@type":"Question","name":"What does the off-hours warning mean?","acceptedAnswer":{"@type":"Answer","text":"If a successful login in the new lines has a log time before 08:00 or after 18:59, the email lists it under a warning. The check uses each login's own timestamp in server time. Change the hours with BUSINESS_HOURS_START and BUSINESS_HOURS_END. An off-hours login appears in an alert that failed attempts triggered; on its own it does not send an email."}},{"@type":"Question","name":"How do you change the threshold or the cooldown?","acceptedAnswer":{"@type":"Answer","text":"Edit FAILED_THRESHOLD (default 5, counted in the lines added since the last run) and LOCK_DURATION in seconds (default 3600) at the top of the script. The install guide lists every setting."}},{"@type":"Question","name":"What data does the script send?","acceptedAnswer":{"@type":"Answer","text":"Only the email itself: your server's host name, the time, the failed-attempt counts by source IP with the user names tried, recent successful logins (time, user, IP address and method) and the warnings. It goes to the Forward Email API or your sendmail relay and then to EMAIL_TO. The script sends nothing anywhere else."}},{"@type":"Question","name":"How do you report a bug or a security issue?","acceptedAnswer":{"@type":"Answer","text":"Open a GitHub issue. Report a security problem privately by email to security@forwardemail.net, as the Forward Email security policy and https://sshmonitor.com/.well-known/security.txt describe."}}]},{"@type":"BreadcrumbList","@id":"https://sshmonitor.com/faq/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://sshmonitor.com/"},{"@type":"ListItem","position":2,"name":"FAQ","item":"https://sshmonitor.com/faq/"}]}]}</script>
+</head>
+<body>
+<!--email_off--><a class="skip-link" href="#main"><!--/email_off-->Skip to content</a>
+<header class="site-header">
+  <div class="container header-content">
+    <!--email_off--><a class="logo" href="/"><!--/email_off-->SSHMonitor</a>
+    <nav aria-label="Main">
+      <ul class="nav-links"><li><!--email_off--><a href="/install/"><!--/email_off-->Install</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->Login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute force</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Compare</a></li><li><!--email_off--><a href="/faq/" aria-current="page"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li><li><!--email_off--><a href="https://forwardemail.net" class="btn-primary" rel="noopener"><!--/email_off-->Try Forward Email</a></li></ul>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="hero">
+  <div class="container hero-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><span aria-current="page">FAQ</span></li></ol></nav>
+    <h1>SSH Monitor FAQ</h1>
+    <p class="lead">Short answers about what <code>ssh_monitor.sh</code> does, where it works and how to tune its alerts.</p>
+    
+  </div>
+</div>
+<article class="container content">
+<h2 id="what-is-ssh-monitor">What is SSH Monitor?</h2>
+<p>SSH Monitor is a free Bash script, <code>ssh_monitor.sh</code>, from the Forward Email team. You run it from cron on a Linux server. Each run reads the new lines in your SSH log, counts failed login attempts and emails you a report through the Forward Email API or <code>sendmail</code> when the count reaches a threshold.</p>
+<h2 id="is-ssh-monitor-free">Is SSH Monitor free?</h2>
+<p>Yes. The script costs nothing and the source is in the <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com" rel="noopener"><!--/email_off-->sshmonitor.com repository</a>. Sending the alert through the Forward Email API or SMTP needs a paid Forward Email plan with outbound SMTP set up. If you send through your own mail server with <code>sendmail</code>, you need no Forward Email plan.</p>
+<h2 id="does-ssh-monitor-block-attackers">Does SSH Monitor block attackers?</h2>
+<p>No. It only sends alerts. To block addresses, use Fail2Ban, SSHGuard or CrowdSec and turn off password logins. See <!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->SSH Monitor vs Fail2Ban vs Logwatch</a>.</p>
+<h2 id="does-it-send-an-email-for-every-ssh-login">Does it send an email for every SSH login?</h2>
+<p>No. An email goes out only when failed attempts in the new log lines reach <code>FAILED_THRESHOLD</code>. Each alert lists the last 5 successful logins from those lines and flags any outside business hours. For a notice on every login, use the <code>pam_exec</code> setup in <!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts by email</a>.</p>
+<h2 id="is-ssh-monitor-real-time">Is SSH Monitor real time?</h2>
+<p>No. It runs when cron runs it. With the example schedule of every 10 minutes, you hear about a burst of failures within about 10 minutes, unless an alert already went out in the last <code>LOCK_DURATION</code> seconds.</p>
+<h2 id="which-linux-distributions-does-it-work-on">Which Linux distributions does it work on?</h2>
+<p>It works on Linux without changes. It reads <code>/var/log/auth.log</code> (Debian, Ubuntu) if it exists, then <code>/var/log/secure</code> (RHEL, CentOS, Rocky, AlmaLinux, Fedora), then the systemd journal. It reads classic syslog timestamps and ISO 8601 timestamps, and lines from both <code>sshd</code> and <code>sshd-session</code>. It does not run unchanged on macOS or BSD because it uses GNU <code>stat -c</code>.</p>
+<h2 id="does-it-work-with-the-systemd-journal">Does it work with the systemd journal?</h2>
+<p>Yes. When no log file exists, as on a fresh Debian 12 install, the script runs <code>journalctl -u ssh -u sshd</code> and saves the journal cursor in <code>/var/lib/ssh_monitor/journal.cursor</code>. Later runs read only entries after that cursor. The first run reads the last 24 hours (<code>JOURNAL_SINCE</code>).</p>
+<h2 id="how-often-can-you-get-an-alert">How often can you get an alert?</h2>
+<p>At most once per <code>LOCK_DURATION</code> (3600 seconds by default), and only when the lines added since the last run hold at least <code>FAILED_THRESHOLD</code> failed attempts. Old failures are never reported twice, because the script saves its read position after each run. Attempts that arrive during the cooldown are kept and sent with the next alert.</p>
+<h2 id="what-happens-when-the-log-rotates">What happens when the log rotates?</h2>
+<p>The script saves the log file's inode and byte offset. If the inode changes, it reads the rest of the old file (now <code>auth.log.1</code>) from the saved offset and then the whole new file. If the file shrank, for example after a copytruncate rotation, it reads the file from the start.</p>
+<h2 id="what-happens-if-sending-fails">What happens if sending fails?</h2>
+<p>The run log gets an <code>Alert email via API failed</code> (or SMTP) line. The script does not start the cooldown and does not move its read position, so the next run sends the same attempts again, plus any new ones.</p>
+<h2 id="which-failed-login-lines-does-it-count">Which failed login lines does it count?</h2>
+<p><code>Failed password</code>, <code>Failed publickey</code>, <code>Failed keyboard-interactive/pam</code> and other <code>Failed &lt;method&gt;</code> lines, PAM <code>authentication failure</code> lines, <code>Invalid user</code>, and <code>Connection closed by</code> or <code>Disconnected from</code> an authenticating or invalid user before login. sshd and PAM often log two or three of these for one attempt, so the script groups lines by sshd process and counts each attempt once:</p>
+<ol><li>Each <code>Failed &lt;method&gt;</code> line counts as one attempt.</li><li>If a connection has none, each PAM <code>authentication failure</code> line counts.</li><li>If it has neither, one <code>Invalid user</code> or closed-before-login line counts once for the connection.</li></ol>
+<p>rsyslog lines such as <code>message repeated 2 times: [ Failed password ... ]</code> count as 2. This means key-only servers still alert on bots that try user names and disconnect.</p>
+<h2 id="do-you-need-a-forward-email-account">Do you need a Forward Email account?</h2>
+<p>You need one to send with the Forward Email API, which is the default. You need an API token, a domain with outbound SMTP set up, and a <code>from</code> address that is an alias of that domain. To receive alerts at a domain that uses Forward Email for forwarding, the free plan works without an account: you set MX and TXT DNS records.</p>
+<h2 id="can-you-use-another-email-provider">Can you use another email provider?</h2>
+<p>Yes, with the <code>sendmail</code> path. Set <code>SEND_METHOD=&quot;smtp&quot;</code> and configure an MTA such as msmtp or Postfix to relay through your provider's SMTP server. The API path is specific to the Forward Email API.</p>
+<h2 id="where-is-the-api-key-stored">Where is the API key stored?</h2>
+<p>In plain text in the <code>FORWARD_EMAIL_API_KEY</code> variable at the top of the script. Keep the file owned by root with mode 700 (<code>sudo chmod 700 /usr/local/bin/ssh_monitor.sh</code>) so other users cannot read it.</p>
+<h2 id="what-does-the-off-hours-warning-mean">What does the off-hours warning mean?</h2>
+<p>If a successful login in the new lines has a log time before 08:00 or after 18:59, the email lists it under a warning. The check uses each login's own timestamp in server time. Change the hours with <code>BUSINESS_HOURS_START</code> and <code>BUSINESS_HOURS_END</code>. An off-hours login appears in an alert that failed attempts triggered; on its own it does not send an email.</p>
+<h2 id="how-do-you-change-the-threshold-or-the-cooldown">How do you change the threshold or the cooldown?</h2>
+<p>Edit <code>FAILED_THRESHOLD</code> (default 5, counted in the lines added since the last run) and <code>LOCK_DURATION</code> in seconds (default 3600) at the top of the script. The <!--email_off--><a href="/install/"><!--/email_off-->install guide</a> lists every setting.</p>
+<h2 id="what-data-does-the-script-send">What data does the script send?</h2>
+<p>Only the email itself: your server's host name, the time, the failed-attempt counts by source IP with the user names tried, recent successful logins (time, user, IP address and method) and the warnings. It goes to the Forward Email API or your <code>sendmail</code> relay and then to <code>EMAIL_TO</code>. The script sends nothing anywhere else.</p>
+<h2 id="how-do-you-report-a-bug-or-a-security-issue">How do you report a bug or a security issue?</h2>
+<p>Open a <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/issues" rel="noopener"><!--/email_off-->GitHub issue</a>. Report a security problem privately by email to <!--email_off-->security@forwardemail.net<!--/email_off-->, as the <!--email_off--><a href="https://forwardemail.net/en/security" rel="noopener"><!--/email_off-->Forward Email security policy</a> and <code>https://sshmonitor.com/.well-known/security.txt</code> describe.</p>
+</article>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-column">
+        <p class="footer-title">SSH Monitor</p>
+        <p>A free SSH log monitoring script from the <!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email</a> team. It emails you when failed SSH logins pile up.</p>
+        <div class="social-links">
+          <!--email_off--><a href="https://github.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg><span class="sr-only">Forward Email on GitHub</span></a>
+          <!--email_off--><a href="https://x.com/fwdemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span class="sr-only">Forward Email on X</span></a>
+          <!--email_off--><a href="https://www.youtube.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span class="sr-only">Forward Email on YouTube</span></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Guides</p>
+        <ul><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><!--email_off--><a href="/install/"><!--/email_off-->Install guide</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute-force detection</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Fail2Ban and Logwatch comparison</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Forward Email</p>
+        <ul>
+          <li><!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email home</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/pricing" rel="noopener"><!--/email_off-->Plans and pricing</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/email-api" rel="noopener"><!--/email_off-->Email API reference</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/faq" rel="noopener"><!--/email_off-->Forward Email FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Project</p>
+        <ul>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com" rel="noopener"><!--/email_off-->Source code on GitHub</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/issues" rel="noopener"><!--/email_off-->Report an issue</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh" rel="noopener"><!--/email_off-->Read ssh_monitor.sh</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/security" rel="noopener"><!--/email_off-->Report a security issue</a></li>
+          <li><!--email_off--><a href="/about/#privacy-note"><!--/email_off-->Privacy policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>SSH Monitor is made by the Forward Email team. No cookies, no tracking.</p>
+      <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/src/pages/faq.md" class="edit-link" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> Edit this page on GitHub</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

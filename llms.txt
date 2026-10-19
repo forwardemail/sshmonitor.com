@@ -1,0 +1,26 @@
+# SSH Monitor
+
+> SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report through Forward Email when they pass a threshold.
+
+The script is ssh_monitor.sh. It runs from cron on Linux and reads only the lines added since the last run from /var/log/auth.log, /var/log/secure or the systemd journal (it saves an inode and byte offset, or a journal cursor). It counts failed attempts (Failed password/publickey/keyboard-interactive, PAM authentication failure, Invalid user, connections closed before login), counting each attempt once, and sends one HTML email when the count reaches FAILED_THRESHOLD, at most once per cooldown. Failed sends are retried on the next run. It does not block IP addresses and does not send an email for each successful login. Every page below is also available as Markdown at <page>/index.md.
+
+## Guides
+
+- [Free SSH Monitoring with Email Alerts](https://sshmonitor.com/index.md): What the script does, what the alert email contains, what it does not do, and a quick start.
+- [How to Install SSH Monitor](https://sshmonitor.com/install/index.md): Requirements, Forward Email setup, configuration variables, cron schedule, testing, troubleshooting and uninstall.
+- [SSH Login Alerts by Email](https://sshmonitor.com/ssh-login-alerts/index.md): What SSH Monitor reports about successful logins, and a pam_exec script that emails on every SSH login.
+- [How to Detect SSH Brute-Force Attempts](https://sshmonitor.com/ssh-brute-force-detection/index.md): Log lines that show SSH brute-force attempts, commands to count them, how SSH Monitor alerts on them, and sshd settings and tools that block them.
+- [SSH Monitor vs Fail2Ban vs Logwatch](https://sshmonitor.com/fail2ban-vs-logwatch/index.md): What Fail2Ban, Logwatch and SSH Monitor each do, a comparison table, and how to run them together.
+- [SSH Monitor FAQ](https://sshmonitor.com/faq/index.md): Questions and answers about cost, blocking, per-login alerts, supported systems, the journal, counted log lines, alert frequency, rotation, retries, providers, API keys and bug reports.
+- [About SSH Monitor](https://sshmonitor.com/about/index.md): Who makes SSH Monitor, contact options, source code, privacy note and how the site checks its facts.
+
+## Source
+
+- [ssh_monitor.sh](https://sshmonitor.com/ssh_monitor.sh): The full Bash script.
+- [GitHub repository](https://github.com/forwardemail/sshmonitor.com): Source for the script and this site.
+- [Full text for LLMs](https://sshmonitor.com/llms-full.txt): All guides in one Markdown file.
+
+## Optional
+
+- [Forward Email](https://forwardemail.net): Open-source email service that delivers the alerts.
+- [Forward Email API reference](https://forwardemail.net/en/email-api): The POST /v1/emails endpoint the script calls.

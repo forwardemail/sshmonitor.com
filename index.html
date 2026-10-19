@@ -1,346 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="preconnect" href="https://forwardemail.net">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSH Monitoring | Real-time Security Alerts & Activity Tracking</title>
-    <meta name="description" content="Secure your servers with comprehensive SSH monitoring. Get real-time alerts for unauthorized access attempts, track user activity, and enhance your security posture.">
-    <meta name="keywords" content="SSH monitoring, SSH security monitoring, SSH access monitoring, SSH activity monitoring, SSH connection monitoring, SSH login monitoring, SSH security alerts">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/seo-optimization.css">
-    <link rel="stylesheet" href="css/resources.css">
-    <link rel="stylesheet" href="css/citations-compact.css">
-    <link rel="stylesheet" href="css/enhanced-navigation.css">
-    <link rel="stylesheet" href="css/light-mode.css">
-    <link rel="stylesheet" href="css/light-mode-optimization.css">
-    <link rel="stylesheet" href="css/global-contrast-fix.css">
-    <link rel="stylesheet" href="css/light-mode-contrast-fix.css">
-    <link rel="stylesheet" href="css/edit-link.css">
-    <link rel="stylesheet" href="css/hero-text-fix.css">
-    <link rel="stylesheet" href="css/mobile-menu.css">
-    <link rel="stylesheet" href="css/mobile-header-fix.css">
-    <link rel="stylesheet" href="css/button-contrast-fix.css">
-    <!-- Favicon -->
-    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-    <script src="js/seo-optimization.js" defer></script>
-    <script src="js/script.js" defer></script>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>SSH Monitor: Free SSH Login Alerts by Email</title>
+<meta name="description" content="Free Bash script that counts failed SSH login attempts in your auth log or journal and emails you a report through Forward Email.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://sshmonitor.com/">
+<link rel="alternate" type="text/markdown" href="/index.md" title="Free SSH Monitoring with Email Alerts (Markdown)">
+<meta name="theme-color" content="#1a365d">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/images/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
+<link rel="stylesheet" href="/css/style.min.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SSH Monitor">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="SSH Monitor: Free SSH Login Alerts by Email">
+<meta property="og:description" content="Free Bash script that counts failed SSH login attempts in your auth log or journal and emails you a report through Forward Email.">
+<meta property="og:url" content="https://sshmonitor.com/">
+<meta property="og:image" content="https://sshmonitor.com/images/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@fwdemail">
+<meta name="twitter:title" content="SSH Monitor: Free SSH Login Alerts by Email">
+<meta name="twitter:description" content="Free Bash script that counts failed SSH login attempts in your auth log or journal and emails you a report through Forward Email.">
+<meta name="twitter:image" content="https://sshmonitor.com/images/og-image.png">
+<meta name="twitter:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://forwardemail.net/#organization","name":"Forward Email","url":"https://forwardemail.net","logo":"https://forwardemail.net/img/logo-square-180x180.png","sameAs":["https://github.com/forwardemail","https://x.com/fwdemail","https://www.youtube.com/forwardemail","https://www.reddit.com/r/forwardemail/"],"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","email":"support@forwardemail.net","url":"https://forwardemail.net/en/faq"},{"@type":"ContactPoint","contactType":"security","email":"security@forwardemail.net","url":"https://forwardemail.net/en/security"}]},{"@type":"WebSite","@id":"https://sshmonitor.com/#website","url":"https://sshmonitor.com/","name":"SSH Monitor","description":"SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report through Forward Email when they pass a threshold.","inLanguage":"en","publisher":{"@id":"https://forwardemail.net/#organization"}},{"@type":"WebPage","@id":"https://sshmonitor.com/#webpage","url":"https://sshmonitor.com/","name":"Free SSH Monitoring with Email Alerts","description":"Free Bash script that counts failed SSH login attempts in your auth log or journal and emails you a report through Forward Email.","inLanguage":"en","isPartOf":{"@id":"https://sshmonitor.com/#website"},"publisher":{"@id":"https://forwardemail.net/#organization"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://sshmonitor.com/images/og-image.png","width":1200,"height":630},"about":{"@id":"https://sshmonitor.com/#software"}},{"@type":"SoftwareApplication","@id":"https://sshmonitor.com/#software","name":"SSH Monitor","alternateName":"ssh_monitor.sh","description":"Bash script that reads new SSH log lines (auth.log, secure or the systemd journal), counts failed login attempts and emails a report through the Forward Email API or sendmail when a threshold is reached.","url":"https://sshmonitor.com/","applicationCategory":"SecurityApplication","operatingSystem":"Linux","downloadUrl":"https://sshmonitor.com/ssh_monitor.sh","installUrl":"https://sshmonitor.com/install/","softwareRequirements":"bash, awk, sed, GNU coreutils, curl or sendmail, cron","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":"https://forwardemail.net/#organization"},"publisher":{"@id":"https://forwardemail.net/#organization"}}]}</script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <h1>SSHMonitor</h1>
-                </div>
-                <nav>
-                    <ul class="nav-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#benefits">Benefits</a></li>
-                        <li><a href="#implementation">Implementation</a></li>
-                        <li><a href="#resources">Resources</a></li>
-                        <li><a href="#citations">References</a></li>
-                        <li><a href="https://forwardemail.net" class="btn-primary">Try Forward Email</a></li>
-                    </ul>
-                </nav>
-            </div>
+<!--email_off--><a class="skip-link" href="#main"><!--/email_off-->Skip to content</a>
+<header class="site-header">
+  <div class="container header-content">
+    <!--email_off--><a class="logo" href="/" aria-current="page"><!--/email_off-->SSHMonitor</a>
+    <nav aria-label="Main">
+      <ul class="nav-links"><li><!--email_off--><a href="/install/"><!--/email_off-->Install</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->Login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute force</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Compare</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li><li><!--email_off--><a href="https://forwardemail.net" class="btn-primary" rel="noopener"><!--/email_off-->Try Forward Email</a></li></ul>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="hero hero-home">
+  <div class="container hero-content">
+    
+    <h1>Free SSH Monitoring with Email Alerts</h1>
+    <p class="lead">SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report when they pass a threshold.</p>
+    <div class="cta-buttons"><!--email_off--><a href="/install/" class="btn-primary"><!--/email_off-->Install the script</a><!--email_off--><a href="https://forwardemail.net" class="btn-secondary" rel="noopener"><!--/email_off-->Learn about Forward Email</a></div>
+  </div>
+</div>
+<article class="container content">
+<h2 id="what-is-ssh-monitor">What is SSH Monitor?</h2>
+<p>SSH Monitor is <code>ssh_monitor.sh</code>, a single Bash script that you run from cron on a Linux server. Each run reads only the SSH log lines added since the last run, counts the failed login attempts in them and collects the successful logins. When the count reaches your threshold (5 by default), the script sends one HTML email through the <!--email_off--><a href="https://forwardemail.net/en/email-api" rel="noopener"><!--/email_off-->Forward Email API</a> or through your local <code>sendmail</code>.</p>
+<p>The script is free. It needs only standard tools (<code>bash</code>, <code>awk</code>, <code>sort</code>, <code>stat</code>) plus <code>curl</code> or a working <code>sendmail</code>. You can read every line of <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh" rel="noopener"><!--/email_off-->ssh_monitor.sh on GitHub</a> before you install it.</p>
+<h2 id="what-does-ssh-monitor-do">What does SSH Monitor do?</h2>
+<div class="card-grid">
+<div class="card">
+<h3 id="reads-only-new-lines">Reads only new lines</h3>
+<p>The script stores the log file's inode and byte offset in <code>/var/lib/ssh_monitor</code>, so each run reads only what sshd wrote since the last run. It notices log rotation and truncation.</p>
+</div>
+<div class="card">
+<h3 id="counts-failed-attempts">Counts failed attempts</h3>
+<p>It counts <code>Failed password</code>, <code>Failed publickey</code>, keyboard-interactive failures, PAM <code>authentication failure</code> lines, <code>Invalid user</code> and connections closed before login, and counts each attempt once.</p>
+</div>
+<div class="card">
+<h3 id="lists-recent-logins">Lists recent logins</h3>
+<p>The alert shows the last 5 successful logins, sorted by time, with the user, source IP and method (password or publickey).</p>
+</div>
+<div class="card">
+<h3 id="flags-off-hours-logins">Flags off-hours logins</h3>
+<p>Any successful login with a log time before 08:00 or after 18:59 gets its own warning in the email. You can change the hours.</p>
+</div>
+<div class="card">
+<h3 id="limits-alert-floods">Limits alert floods</h3>
+<p>After a sent alert, the script waits <code>LOCK_DURATION</code> seconds (3600 by default). Failures during that wait go into the next alert instead of being dropped.</p>
+</div>
+<div class="card">
+<h3 id="retries-failed-sends">Retries failed sends</h3>
+<p>If the API call or <code>sendmail</code> fails, the script does not start the cooldown and keeps the read position, so the next run tries again with the same lines.</p>
+</div>
+</div>
+<p>It works with <code>/var/log/auth.log</code> (Debian, Ubuntu), <code>/var/log/secure</code> (RHEL, Rocky, AlmaLinux, Fedora) and the systemd journal, in that order, and with both classic syslog and ISO 8601 timestamps.</p>
+<h2 id="what-does-the-alert-email-look-like">What does the alert email look like?</h2>
+<p>The subject is <code>SSH Security Alert: &lt;hostname&gt; - &lt;YYYY-MM-DD&gt;</code>. The body is HTML, and the API also sends a plain-text copy. This is the text of a real alert from a test run, with documentation IP addresses:</p>
+<pre data-lang="text" tabindex="0"><code class="language-text">SSH Security Monitoring Alert
+Server: web-01
+Time: &lt;date of the run&gt;
+Source: /var/log/auth.log (new lines since the last check)
+
+Failed Login Attempts: 6
+  Count  Source IP                               User names tried
+      4  203.0.113.5                             root admin
+      1  198.51.100.8                            deploy
+      1  198.51.100.7                            oracle
+
+Successful Logins (last 5):
+2026-03-03 23:05:00  deploy  192.0.2.10  publickey
+
+This is an automated alert from your SSH monitoring system.
+WARNING: Successful logins outside business hours (08:00 to 18:59):
+2026-03-03 23:05:00  deploy  192.0.2.10
+WARNING: High number of failed login attempts detected!</code></pre>
+<p>Failed attempts are grouped by source IP, with the count and the user names tried from that address. Text taken from the log is HTML-escaped, so a crafted user name cannot change how the email looks.</p>
+<h2 id="what-does-ssh-monitor-not-do">What does SSH Monitor not do?</h2>
+<p>SSH Monitor sends alerts. It does not change anything on your server. Know these limits before you rely on it:</p>
+<ul><li>It does not block IP addresses. Pair it with a blocker such as <!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Fail2Ban</a> if you want bans.</li><li>Successful logins alone do not trigger an email. They appear in an alert that failed attempts triggered, with off-hours logins flagged. See <!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts by email</a> for an email on every login.</li><li>It is not real time. It runs when cron runs it, every 10 minutes in the example setup.</li><li>It does not record shell sessions, commands or file transfers.</li></ul>
+<h2 id="how-do-you-install-it">How do you install it?</h2>
+<p>Download the script, set your addresses and API key, and add one cron line. The <!--email_off--><a href="/install/"><!--/email_off-->install guide</a> covers each step, the requirements and troubleshooting.</p>
+<pre data-lang="bash" tabindex="0"><code class="language-bash">sudo curl -fsSL https://sshmonitor.com/ssh_monitor.sh -o /usr/local/bin/ssh_monitor.sh
+sudo chmod 700 /usr/local/bin/ssh_monitor.sh
+sudo nano /usr/local/bin/ssh_monitor.sh   # set EMAIL_TO, EMAIL_FROM and FORWARD_EMAIL_API_KEY
+sudo /usr/local/bin/ssh_monitor.sh &amp;&amp; sudo tail -n 3 /var/log/ssh_monitor.log</code></pre>
+<p>Then add <code>*/10 * * * * /usr/local/bin/ssh_monitor.sh</code> to root's crontab with <code>sudo crontab -e</code>.</p>
+<h2 id="why-get-ssh-alerts-by-email">Why get SSH alerts by email?</h2>
+<p>Any server with SSH open to the internet receives automated login attempts. The log records them, but nobody reads the log until something goes wrong. An email puts a summary in front of you when failures pile up, and the list of recent successful logins lets you spot a login you do not recognize.</p>
+<p>The email is also a copy of the evidence that lives off the server. If someone gets in and edits the log, the alert already in your inbox still shows what the log said at the time. You can read it on your phone, forward it to your team or filter it into a folder.</p>
+<h2 id="guides-on-this-site">Guides on this site</h2>
+<ul><li><!--email_off--><a href="/install/"><!--/email_off-->Install guide</a>: requirements, configuration, cron schedule, testing and troubleshooting.</li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts by email</a>: what the script reports about successful logins, and how to get an email for every login with PAM.</li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Detect SSH brute-force attempts</a>: read the log, get alerts and block attackers.</li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->SSH Monitor vs Fail2Ban vs Logwatch</a>: three tools that solve different problems.</li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a>: short answers about limits, distributions, providers and alerts.</li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a>: who makes SSH Monitor, how to contact the team and the privacy note.</li></ul>
+<h2 id="who-makes-ssh-monitor">Who makes SSH Monitor?</h2>
+<p>The <!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email</a> team publishes SSH Monitor and this site. Forward Email is an open-source email service. The script uses its API to send the alert, and you can also send through any mail server your <code>sendmail</code> command reaches. Read more on the <!--email_off--><a href="/about/"><!--/email_off-->about page</a>.</p>
+</article>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-column">
+        <p class="footer-title">SSH Monitor</p>
+        <p>A free SSH log monitoring script from the <!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email</a> team. It emails you when failed SSH logins pile up.</p>
+        <div class="social-links">
+          <!--email_off--><a href="https://github.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg><span class="sr-only">Forward Email on GitHub</span></a>
+          <!--email_off--><a href="https://x.com/fwdemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span class="sr-only">Forward Email on X</span></a>
+          <!--email_off--><a href="https://www.youtube.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span class="sr-only">Forward Email on YouTube</span></a>
         </div>
-    </header>
-
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Secure Your Servers with Real-time SSH Monitoring</h1>
-                <p>Detect unauthorized access attempts, track user activity, and receive instant alerts for suspicious behavior with our comprehensive SSH monitoring solution.</p>
-                <div class="cta-buttons">
-                    <a href="#implementation" class="btn-primary">Get Started</a>
-                    <a href="https://forwardemail.net" class="btn-secondary">Learn About Forward Email</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="features" class="features">
-        <div class="container">
-            <h2>Comprehensive SSH Monitoring Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                    </div>
-                    <h3>Real-time Intrusion Detection</h3>
-                    <p>Monitor login attempts in real-time and receive immediate alerts for suspicious activities like brute force attacks or unauthorized access attempts.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                        </svg>
-                    </div>
-                    <h3>User Activity Tracking</h3>
-                    <p>Track and log all SSH sessions, commands executed, and file transfers to maintain a complete audit trail of server activity.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                            <line x1="9" y1="21" x2="9" y2="9"></line>
-                        </svg>
-                    </div>
-                    <h3>Customizable Alerting</h3>
-                    <p>Configure alert thresholds and notification preferences to focus on the security events that matter most to your organization.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                    </div>
-                    <h3>Automated Response</h3>
-                    <p>Set up automated responses to security incidents, such as blocking IP addresses after multiple failed login attempts.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="benefits" class="benefits">
-        <div class="container">
-            <h2>Why Monitor SSH Activity?</h2>
-            <div class="benefits-content">
-                <div class="benefits-text">
-                    <h3>Prevent Unauthorized Access</h3>
-                    <p>SSH is a primary target for attackers seeking server access. According to <a href="https://www.ssh.com/academy/ssh/security" target="_blank">SSH.com</a>, servers face hundreds to thousands of break-in attempts daily, with SSH being a common attack vector.</p>
-
-                    <h3>Maintain Compliance</h3>
-                    <p>Many regulatory frameworks like PCI DSS, SOC 2, and HIPAA require monitoring of privileged access. SSH monitoring helps meet these compliance requirements by providing detailed audit trails of all server access.</p>
-
-                    <h3>Detect Insider Threats</h3>
-                    <p>Not all threats come from outside your organization. According to the <a href="https://www.verizon.com/business/resources/reports/dbir/" target="_blank">Verizon Data Breach Investigations Report</a>, approximately 34% of data breaches involve internal actors.</p>
-
-                    <h3>Reduce Mean Time to Resolution</h3>
-                    <p>When security incidents occur, rapid detection and response are critical. SSH monitoring provides the visibility needed to quickly identify and address security issues.</p>
-                </div>
-                <div class="benefits-image">
-                    <img src="images/ssh-benefits.jpg" alt="Forward Email service illustration">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="implementation" class="implementation">
-        <div class="container">
-            <h2>Easy Implementation with Forward Email</h2>
-            <div class="implementation-content">
-                <h3>Ready-to-Use SSH Monitoring Script</h3>
-                <p>Below is a complete, production-ready Bash script for monitoring SSH login attempts and sending alerts via Forward Email. This script can be easily customized to fit your specific security requirements.</p>
-                <h3>Installation Instructions</h3>
-                <ol class="installation-steps">
-                  <li>
-<strong>Download the script:</strong> <a href="https://raw.githubusercontent.com/forwardemail/sshmonitor.com/refs/heads/main/ssh_monitor.sh" target="_blank">https://raw.githubusercontent.com/forwardemail/sshmonitor.com/refs/heads/main/ssh_monitor.sh</a>
-                  </li>
-                    <li>
-                        <strong>Save the script to your server:</strong>
-                        <div class="code-container">
-                            <pre class="shiki-code" data-language="bash">sudo nano /usr/local/bin/ssh_monitor.sh</pre>
-                        </div>
-                        <p>Paste the script above and save the file.</p>
-                    </li>
-                    <li>
-                        <strong>Make the script executable:</strong>
-                        <div class="code-container">
-                            <pre class="shiki-code" data-language="bash">sudo chmod +x /usr/local/bin/ssh_monitor.sh</pre>
-                        </div>
-                    </li>
-                    <li>
-                        <strong>Configure the script:</strong>
-                        <p>Edit the configuration variables at the top of the script to match your environment:</p>
-                        <ul>
-                            <li>Set <code>EMAIL_TO</code> to your administrator email address</li>
-                            <li>Set <code>EMAIL_FROM</code> to your alert sender address</li>
-                            <li>Get an API key from <a href="https://forwardemail.net/my-account/security">Forward Email</a> and set <code>FORWARD_EMAIL_API_KEY</code></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <strong>Set up a cron job to run the script periodically:</strong>
-                        <pre><code>sudo crontab -e</code></pre>
-                        <p>Add the following line to run the script every 10 minutes:</p>
-                        <pre><code>*/10 * * * * /usr/local/bin/ssh_monitor.sh</code></pre>
-                    </li>
-                    <li>
-                        <strong>Test the script:</strong>
-                        <pre><code>sudo /usr/local/bin/ssh_monitor.sh</code></pre>
-                        <p>Check the log file to verify it's working:</p>
-                        <pre><code>tail /var/log/ssh_monitor.log</code></pre>
-                    </li>
-                </ol>
-            </div>
-        </div>
-    </section>
-
-    <section id="resources" class="resources">
-        <div class="container">
-            <h2>SSH Monitoring Tools &amp; Resources</h2>
-            <div class="resources-content">
-                <h3>Recommended Tools</h3>
-                <p>Below is a curated list of popular tools for SSH monitoring and security:</p>
-
-                <div class="tools-grid">
-                    <div class="tool-card">
-                        <h4>Fail2ban</h4>
-                        <p>Ban hosts that cause multiple authentication errors.</p>
-                        <a href="https://github.com/fail2ban/fail2ban" class="tool-link">GitHub Repository</a>
-                    </div>
-                    <div class="tool-card">
-                        <h4>SSHGuard</h4>
-                        <p>Protects hosts from brute-force attacks against SSH and other services.</p>
-                        <a href="https://github.com/SSHGuard/sshguard" class="tool-link">GitHub Repository</a>
-                    </div>
-                    <div class="tool-card">
-                        <h4>CrowdSec</h4>
-                        <p>Behavior detection engine and collaborative IP reputation system.</p>
-                        <a href="https://github.com/crowdsecurity/crowdsec" class="tool-link">GitHub Repository</a>
-                    </div>
-                    <div class="tool-card">
-                        <h4>OSSEC</h4>
-                        <p>Host-based Intrusion Detection System with SSH monitoring capabilities.</p>
-                        <a href="https://github.com/ossec/ossec-hids" class="tool-link">GitHub Repository</a>
-                    </div>
-                </div>
-
-                <h3>Additional Resources</h3>
-                <ul class="resources-list">
-                    <li><a href="https://github.com/denyhosts/denyhosts">DenyHosts</a> - SSH server access control and monitoring</li>
-                    <li><a href="https://github.com/logwatch/logwatch">Logwatch</a> - Customizable log analysis system</li>
-                    <li><a href="https://bitbucket.org/tildeslash/monit/src/master/">Monit</a> - Utility for monitoring services on a Unix system</li>
-                </ul>
-
-                <div class="integration-note">
-                    <h3>Integration with Forward Email</h3>
-                    <p>All of these tools can be configured to send alerts through Forward Email's SMTP service or HTTP API. This provides:</p>
-                    <ul>
-                        <li>High deliverability for critical security notifications</li>
-                        <li>Reliable email delivery for automated alerts</li>
-                        <li>Simple integration with existing monitoring infrastructure</li>
-                        <li>Cost-effective solution at only $3000/year fixed pricing</li>
-                    </ul>
-                    <p>For implementation examples, refer to the SSH monitoring script provided above.</p>
-                    <a href="https://forwardemail.net" class="btn-primary">Learn More About Forward Email</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="email-alerts" class="email-alerts">
-        <div class="container">
-            <h2>SSH Security Alert Notifications</h2>
-            <p>Receive immediate notifications when suspicious SSH activity is detected. Our system sends real-time alerts for login failures, unusual access patterns, and potential security breaches.</p>
-            <div class="alert-features">
-                <div class="alert-feature">
-                    <h3>Real-time Monitoring</h3>
-                    <p>Get instant notifications of suspicious SSH activity as it happens, not hours or days later.</p>
-                </div>
-                <div class="alert-feature">
-                    <h3>Customizable Rules</h3>
-                    <p>Define what constitutes suspicious activity based on your organization's security policies.</p>
-                </div>
-                <div class="alert-feature">
-                    <h3>Detailed Reports</h3>
-                    <p>Receive comprehensive information about each security event, including IP addresses, usernames, and timestamps.</p>
-                </div>
-            </div>
-            <!-- Demo button will be inserted here by JavaScript -->
-        </div>
-    </section>
-
-    <section id="citations" class="citations-compact">
-        <div class="container">
-            <h3>Citations & References</h3>
-            <ol>
-                <li id="citation-1">Fail2ban. (2025). <em>Fail2ban Documentation</em>. Retrieved April 6, 2025, from <a href="https://github.com/fail2ban/fail2ban" target="_blank">https://github.com/fail2ban/fail2ban</a></li>
-                <li id="citation-2">Forward Email. (2025). <em>API Documentation</em>. Retrieved April 6, 2025, from <a href="https://forwardemail.net/api" target="_blank">https://forwardemail.net/api</a></li>
-                <li id="citation-3">NIST. (2024). <em>Guide to SSH Implementation</em>. National Institute of Standards and Technology. Retrieved April 6, 2025.</li>
-            </ol>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <h2>SSHMonitor</h2>
-                </div>
-                <div class="footer-grid">
-                    <div class="footer-column">
-                        <h3>Quick Links</h3>
-                        <ul>
-                            <li><a href="#features">Features</a></li>
-                            <li><a href="#benefits">Benefits</a></li>
-                            <li><a href="#implementation">Implementation</a></li>
-                            <li><a href="#resources">Resources</a></li>
-                            <li><a href="#citations">References</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h3>Resources</h3>
-                        <ul>
-                            <li><a href="https://github.com/fail2ban/fail2ban">Fail2ban</a></li>
-                            <li><a href="https://github.com/SSHGuard/sshguard">SSHGuard</a></li>
-                            <li><a href="https://github.com/crowdsecurity/crowdsec">CrowdSec</a></li>
-                            <li><a href="https://github.com/ossec/ossec-hids">OSSEC</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h3>Forward Email</h3>
-                        <ul>
-                            <li><a href="https://forwardemail.net">Homepage</a></li>
-                            <li><a href="https://forwardemail.net/pricing">Pricing</a></li>
-                            <li><a href="https://forwardemail.net/faq">FAQ</a></li>
-                            <li><a href="https://forwardemail.net/api">API Documentation</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h3>Contact</h3>
-                        <p>For more information about SSH monitoring and email alerts, visit <a href="https://forwardemail.net">Forward Email</a>.</p>
-                        <div class="social-links">
-                            <a href="https://github.com/forwardemail" title="GitHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
-                            <a href="https://x.com/fwdemail" title="X"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><style>.x-logo { fill: #000000; }</style><path class="x-logo" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 SSHMonitor. All rights reserved.</p>
-                <a href="https://github.com/forwardemail/sshmonitor.com" class="edit-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    Edit this page
-                </a>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Add copy functionality to code blocks
-        document.querySelectorAll('.copy-button').forEach(button => {
-            button.addEventListener('click', () => {
-                const codeBlock = button.closest('.code-block, .github-code-container').querySelector('code, pre');
-                const textToCopy = codeBlock.textContent;
-
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    button.textContent = 'Copied!';
-                    setTimeout(() => {
-                        button.textContent = 'Copy';
-                    }, 2000);
-                });
-            });
-        });
-    </script>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Guides</p>
+        <ul><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><!--email_off--><a href="/install/"><!--/email_off-->Install guide</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute-force detection</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Fail2Ban and Logwatch comparison</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Forward Email</p>
+        <ul>
+          <li><!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email home</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/pricing" rel="noopener"><!--/email_off-->Plans and pricing</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/email-api" rel="noopener"><!--/email_off-->Email API reference</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/faq" rel="noopener"><!--/email_off-->Forward Email FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Project</p>
+        <ul>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com" rel="noopener"><!--/email_off-->Source code on GitHub</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/issues" rel="noopener"><!--/email_off-->Report an issue</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh" rel="noopener"><!--/email_off-->Read ssh_monitor.sh</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/security" rel="noopener"><!--/email_off-->Report a security issue</a></li>
+          <li><!--email_off--><a href="/about/#privacy-note"><!--/email_off-->Privacy policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>SSH Monitor is made by the Forward Email team. No cookies, no tracking.</p>
+      <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/src/pages/index.md" class="edit-link" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> Edit this page on GitHub</a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

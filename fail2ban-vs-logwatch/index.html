@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>SSH Monitor vs Fail2Ban vs Logwatch: What Each One Does</title>
+<meta name="description" content="Fail2Ban bans IPs, Logwatch writes reports and SSH Monitor emails SSH failure alerts. See what each does and how to combine them.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://sshmonitor.com/fail2ban-vs-logwatch/">
+<link rel="alternate" type="text/markdown" href="/fail2ban-vs-logwatch/index.md" title="SSH Monitor vs Fail2Ban vs Logwatch (Markdown)">
+<meta name="theme-color" content="#1a365d">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/images/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
+<link rel="stylesheet" href="/css/style.min.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SSH Monitor">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="SSH Monitor vs Fail2Ban vs Logwatch: What Each One Does">
+<meta property="og:description" content="Fail2Ban bans IPs, Logwatch writes reports and SSH Monitor emails SSH failure alerts. See what each does and how to combine them.">
+<meta property="og:url" content="https://sshmonitor.com/fail2ban-vs-logwatch/">
+<meta property="og:image" content="https://sshmonitor.com/images/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@fwdemail">
+<meta name="twitter:title" content="SSH Monitor vs Fail2Ban vs Logwatch: What Each One Does">
+<meta name="twitter:description" content="Fail2Ban bans IPs, Logwatch writes reports and SSH Monitor emails SSH failure alerts. See what each does and how to combine them.">
+<meta name="twitter:image" content="https://sshmonitor.com/images/og-image.png">
+<meta name="twitter:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://forwardemail.net/#organization","name":"Forward Email","url":"https://forwardemail.net","logo":"https://forwardemail.net/img/logo-square-180x180.png","sameAs":["https://github.com/forwardemail","https://x.com/fwdemail","https://www.youtube.com/forwardemail","https://www.reddit.com/r/forwardemail/"],"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","email":"support@forwardemail.net","url":"https://forwardemail.net/en/faq"},{"@type":"ContactPoint","contactType":"security","email":"security@forwardemail.net","url":"https://forwardemail.net/en/security"}]},{"@type":"WebSite","@id":"https://sshmonitor.com/#website","url":"https://sshmonitor.com/","name":"SSH Monitor","description":"SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report through Forward Email when they pass a threshold.","inLanguage":"en","publisher":{"@id":"https://forwardemail.net/#organization"}},{"@type":"WebPage","@id":"https://sshmonitor.com/fail2ban-vs-logwatch/#webpage","url":"https://sshmonitor.com/fail2ban-vs-logwatch/","name":"SSH Monitor vs Fail2Ban vs Logwatch","description":"Fail2Ban bans IPs, Logwatch writes reports and SSH Monitor emails SSH failure alerts. See what each does and how to combine them.","inLanguage":"en","isPartOf":{"@id":"https://sshmonitor.com/#website"},"publisher":{"@id":"https://forwardemail.net/#organization"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://sshmonitor.com/images/og-image.png","width":1200,"height":630},"breadcrumb":{"@id":"https://sshmonitor.com/fail2ban-vs-logwatch/#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://sshmonitor.com/fail2ban-vs-logwatch/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://sshmonitor.com/"},{"@type":"ListItem","position":2,"name":"Fail2Ban and Logwatch comparison","item":"https://sshmonitor.com/fail2ban-vs-logwatch/"}]}]}</script>
+</head>
+<body>
+<!--email_off--><a class="skip-link" href="#main"><!--/email_off-->Skip to content</a>
+<header class="site-header">
+  <div class="container header-content">
+    <!--email_off--><a class="logo" href="/"><!--/email_off-->SSHMonitor</a>
+    <nav aria-label="Main">
+      <ul class="nav-links"><li><!--email_off--><a href="/install/"><!--/email_off-->Install</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->Login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute force</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/" aria-current="page"><!--/email_off-->Compare</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li><li><!--email_off--><a href="https://forwardemail.net" class="btn-primary" rel="noopener"><!--/email_off-->Try Forward Email</a></li></ul>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="hero">
+  <div class="container hero-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><span aria-current="page">Fail2Ban and Logwatch comparison</span></li></ol></nav>
+    <h1>SSH Monitor vs Fail2Ban vs Logwatch</h1>
+    <p class="lead">These three tools solve different problems. Fail2Ban blocks IP addresses, Logwatch writes a summary report of many system logs, and SSH Monitor sends an email when failed SSH logins pass a threshold.</p>
+    
+  </div>
+</div>
+<article class="container content">
+<h2 id="what-is-the-difference-between-fail2ban-logwatch-and-ssh-monitor">What is the difference between Fail2Ban, Logwatch and SSH Monitor?</h2>
+<p>All three read log files, so they get compared, but they do different jobs.</p>
+<div class="table-container" tabindex="0" role="region" aria-label="Feature, Fail2Ban, Logwatch, SSH Monitor"><table class="wide"><caption>Fail2Ban, Logwatch and SSH Monitor compared</caption><thead><tr><th scope="col">Feature</th><th scope="col">Fail2Ban</th><th scope="col">Logwatch</th><th scope="col">SSH Monitor</th></tr></thead><tbody><tr><th scope="row">Main job</th><td>Ban IP addresses that fail too often</td><td>Summarize many logs in one report</td><td>Email an alert when failed SSH logins pass a threshold</td></tr><tr><th scope="row">Changes firewall rules</th><td>Yes</td><td>No</td><td>No</td></tr><tr><th scope="row">Sends email</th><td>Optional, with the <code>action_mw</code> or <code>action_mwl</code> actions</td><td>Yes, with <code>--output mail</code></td><td>Yes, every alert</td></tr><tr><th scope="row">What it reads</th><td>Logs for each enabled jail (sshd, web servers and more)</td><td>Many system logs through service filters</td><td>The SSH log file or the systemd journal, new lines only</td></tr><tr><th scope="row">When it runs</th><td>As a daemon, all the time</td><td>When you run it, for a date range such as yesterday</td><td>From cron, every 10 minutes in the example setup</td></tr><tr><th scope="row">Setup size</th><td>Package plus a <code>jail.local</code> file</td><td>Package plus options</td><td>One Bash script</td></tr></tbody></table></div>
+<h2 id="what-does-fail2ban-do">What does Fail2Ban do?</h2>
+<p>Fail2Ban scans log files such as <code>/var/log/auth.log</code> and bans IP addresses with too many failed logins by updating firewall rules for a set time (<!--email_off--><a href="https://github.com/fail2ban/fail2ban" rel="noopener"><!--/email_off-->Fail2Ban README</a>). In the stock <code>jail.conf</code>, a host is banned after <code>maxretry = 5</code> failures within <code>findtime = 10m</code>, for <code>bantime = 10m</code>.</p>
+<p>All jails are off by default, including <code>sshd</code>. You turn the SSH jail on in <code>/etc/fail2ban/jail.local</code>:</p>
+<pre data-lang="text" tabindex="0"><code class="language-text">[sshd]
+enabled = true</code></pre>
+<p>Fail2Ban can email you on each ban. The <code>action_mw</code> action bans and sends a whois report to <code>destemail</code>, and <code>action_mwl</code> adds the matching log lines. It sends through <code>sendmail</code> by default, so the same msmtp setup from the <!--email_off--><a href="/install/"><!--/email_off-->install guide</a> works for it.</p>
+<h2 id="what-does-logwatch-do">What does Logwatch do?</h2>
+<p>Logwatch is a customizable log analysis system. It parses your system logs and creates a report on the areas you choose (<!--email_off--><a href="https://sourceforge.net/projects/logwatch/" rel="noopener"><!--/email_off-->Logwatch on SourceForge</a>). You pick a date range such as <code>yesterday</code> or <code>today</code>, and <code>--output mail --mailto <!--email_off-->you@example.com<!--/email_off--></code> sends the report by email.</p>
+<p>A Logwatch report covers far more than SSH: disk space, package changes, mail server activity and other services, depending on what is installed. It is a daily read, not an alarm.</p>
+<h2 id="what-does-ssh-monitor-do">What does SSH Monitor do?</h2>
+<p>SSH Monitor is one Bash script. Each cron run reads the lines added to your SSH log since the last run, counts the failed attempts, and when the count reaches <code>FAILED_THRESHOLD</code> it sends one HTML email with the attempts by source IP and the last 5 successful logins, then waits <code>LOCK_DURATION</code> seconds before it can send another. It sends through the Forward Email API or <code>sendmail</code>. It does not block anything. The <!--email_off--><a href="/"><!--/email_off-->home page</a> lists everything it does and does not do.</p>
+<h2 id="which-one-should-you-use">Which one should you use?</h2>
+<ul><li><strong>You want attackers blocked.</strong> Use Fail2Ban, SSHGuard or CrowdSec, and turn off password logins.</li><li><strong>You want one daily summary of your whole server.</strong> Use Logwatch.</li><li><strong>You want an email when SSH failures pile up, with no daemon and nothing to learn.</strong> Use SSH Monitor.</li><li><strong>You want an email for every successful login.</strong> Use a PAM hook. See <!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts by email</a>.</li></ul>
+<h2 id="can-you-run-them-together">Can you run them together?</h2>
+<p>Yes. They read the same logs and do not conflict. A common setup is Fail2Ban to ban addresses and an email alert so you know an attack is going on.</p>
+<p>When Fail2Ban bans an address, that address stops reaching sshd, so it stops adding failed-login lines. SSH Monitor still reports the attempts made before the ban, so you see what Fail2Ban reacted to.</p>
+<h2 id="other-tools-you-may-see-compared">Other tools you may see compared</h2>
+<ul><li><strong>SSHGuard</strong> protects hosts from brute-force attacks against SSH and other services by reading system logs and blocking repeat offenders (<!--email_off--><a href="https://www.sshguard.net/" rel="noopener"><!--/email_off-->sshguard.net</a>).</li><li><strong>CrowdSec</strong> detects and blocks malicious IPs and shares a community blocklist (<!--email_off--><a href="https://github.com/crowdsecurity/crowdsec" rel="noopener"><!--/email_off-->CrowdSec repository</a>).</li><li><strong>OSSEC</strong> is a host-based intrusion detection system that does log analysis, file integrity checking, rootkit detection, alerting and active response (<!--email_off--><a href="https://github.com/ossec/ossec-hids" rel="noopener"><!--/email_off-->OSSEC repository</a>).</li></ul>
+</article>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-column">
+        <p class="footer-title">SSH Monitor</p>
+        <p>A free SSH log monitoring script from the <!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email</a> team. It emails you when failed SSH logins pile up.</p>
+        <div class="social-links">
+          <!--email_off--><a href="https://github.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg><span class="sr-only">Forward Email on GitHub</span></a>
+          <!--email_off--><a href="https://x.com/fwdemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span class="sr-only">Forward Email on X</span></a>
+          <!--email_off--><a href="https://www.youtube.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span class="sr-only">Forward Email on YouTube</span></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Guides</p>
+        <ul><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><!--email_off--><a href="/install/"><!--/email_off-->Install guide</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute-force detection</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Fail2Ban and Logwatch comparison</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Forward Email</p>
+        <ul>
+          <li><!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email home</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/pricing" rel="noopener"><!--/email_off-->Plans and pricing</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/email-api" rel="noopener"><!--/email_off-->Email API reference</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/faq" rel="noopener"><!--/email_off-->Forward Email FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Project</p>
+        <ul>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com" rel="noopener"><!--/email_off-->Source code on GitHub</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/issues" rel="noopener"><!--/email_off-->Report an issue</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh" rel="noopener"><!--/email_off-->Read ssh_monitor.sh</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/security" rel="noopener"><!--/email_off-->Report a security issue</a></li>
+          <li><!--email_off--><a href="/about/#privacy-note"><!--/email_off-->Privacy policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>SSH Monitor is made by the Forward Email team. No cookies, no tracking.</p>
+      <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/src/pages/fail2ban-vs-logwatch.md" class="edit-link" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> Edit this page on GitHub</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

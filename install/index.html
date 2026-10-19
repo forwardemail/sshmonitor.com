@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Install SSH Monitor: Setup, Configuration and Cron</title>
+<meta name="description" content="Install ssh_monitor.sh on Linux: set up Forward Email sending, configure it, schedule it with cron and fix common problems.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://sshmonitor.com/install/">
+<link rel="alternate" type="text/markdown" href="/install/index.md" title="How to Install SSH Monitor (Markdown)">
+<meta name="theme-color" content="#1a365d">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/images/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
+<link rel="stylesheet" href="/css/style.min.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SSH Monitor">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Install SSH Monitor: Setup, Configuration and Cron">
+<meta property="og:description" content="Install ssh_monitor.sh on Linux: set up Forward Email sending, configure it, schedule it with cron and fix common problems.">
+<meta property="og:url" content="https://sshmonitor.com/install/">
+<meta property="og:image" content="https://sshmonitor.com/images/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@fwdemail">
+<meta name="twitter:title" content="Install SSH Monitor: Setup, Configuration and Cron">
+<meta name="twitter:description" content="Install ssh_monitor.sh on Linux: set up Forward Email sending, configure it, schedule it with cron and fix common problems.">
+<meta name="twitter:image" content="https://sshmonitor.com/images/og-image.png">
+<meta name="twitter:image:alt" content="SSH Monitor: free SSH login alerts by email, from the Forward Email team">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://forwardemail.net/#organization","name":"Forward Email","url":"https://forwardemail.net","logo":"https://forwardemail.net/img/logo-square-180x180.png","sameAs":["https://github.com/forwardemail","https://x.com/fwdemail","https://www.youtube.com/forwardemail","https://www.reddit.com/r/forwardemail/"],"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","email":"support@forwardemail.net","url":"https://forwardemail.net/en/faq"},{"@type":"ContactPoint","contactType":"security","email":"security@forwardemail.net","url":"https://forwardemail.net/en/security"}]},{"@type":"WebSite","@id":"https://sshmonitor.com/#website","url":"https://sshmonitor.com/","name":"SSH Monitor","description":"SSH Monitor is a free Bash script from the Forward Email team. It reads the new lines in your SSH log, counts failed login attempts and emails you a report through Forward Email when they pass a threshold.","inLanguage":"en","publisher":{"@id":"https://forwardemail.net/#organization"}},{"@type":"WebPage","@id":"https://sshmonitor.com/install/#webpage","url":"https://sshmonitor.com/install/","name":"How to Install SSH Monitor","description":"Install ssh_monitor.sh on Linux: set up Forward Email sending, configure it, schedule it with cron and fix common problems.","inLanguage":"en","isPartOf":{"@id":"https://sshmonitor.com/#website"},"publisher":{"@id":"https://forwardemail.net/#organization"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://sshmonitor.com/images/og-image.png","width":1200,"height":630},"about":{"@id":"https://sshmonitor.com/#software"},"breadcrumb":{"@id":"https://sshmonitor.com/install/#breadcrumb"}},{"@type":"SoftwareApplication","@id":"https://sshmonitor.com/#software","name":"SSH Monitor","alternateName":"ssh_monitor.sh","description":"Bash script that reads new SSH log lines (auth.log, secure or the systemd journal), counts failed login attempts and emails a report through the Forward Email API or sendmail when a threshold is reached.","url":"https://sshmonitor.com/","applicationCategory":"SecurityApplication","operatingSystem":"Linux","downloadUrl":"https://sshmonitor.com/ssh_monitor.sh","installUrl":"https://sshmonitor.com/install/","softwareRequirements":"bash, awk, sed, GNU coreutils, curl or sendmail, cron","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":"https://forwardemail.net/#organization"},"publisher":{"@id":"https://forwardemail.net/#organization"}},{"@type":"BreadcrumbList","@id":"https://sshmonitor.com/install/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://sshmonitor.com/"},{"@type":"ListItem","position":2,"name":"Install guide","item":"https://sshmonitor.com/install/"}]},{"@type":"HowTo","@id":"https://sshmonitor.com/install/#howto","name":"How to Install SSH Monitor","description":"Install ssh_monitor.sh on Linux: set up Forward Email sending, configure it, schedule it with cron and fix common problems.","tool":[{"@type":"HowToTool","name":"A Linux server with root access"}],"step":[{"@type":"HowToStep","position":1,"name":"Download the script","text":"Save the script to /usr/local/bin and make it readable and executable by root only, since it will hold your API token.\n\nsudo curl -fsSL https://sshmonitor.com/ssh_monitor.sh -o /usr/local/bin/ssh_monitor.sh\nsudo chown root:root /usr/local/bin/ssh_monitor.sh\nsudo chmod 700 /usr/local/bin/ssh_monitor.sh\n\nThe same file is in the GitHub repository. Read it before you run it.","url":"https://sshmonitor.com/install/#step-1-download-the-script"},{"@type":"HowToStep","position":2,"name":"Set the configuration","text":"Open the script with sudo nano /usr/local/bin/ssh_monitor.sh and edit the variables at the top.\n\nVariable | Default | What it controls\nEMAIL_TO | admin@yourdomain.com | Address that receives alerts\nEMAIL_FROM | ssh-alerts@yourdomain.com | Sender address, an alias on your Forward Email domain\nFORWARD_EMAIL_API_KEY | your_api_key_here | Your Forward Email API token\nSEND_METHOD | api | api for the Forward Email API, smtp for the local sendmail command\nLOG_FILE | /var/log/auth.log | SSH log to read. If it does not exist, the script uses /var/log/secure, then the systemd journal\nFAILED_THRESHOLD | 5 | Failed attempts in the new log lines that trigger an email\nALERT_LOCKFILE | /tmp/ssh_monitor_alert.lock | File whose change time marks the last sent alert\nLOCK_DURATION | 3600 | Seconds to wait after a sent alert before the next one\nSTATE_DIR | /var/lib/ssh_monitor | Where the read position (position) or journal cursor (journal.cursor) is stored\nRUN_LOG | /var/log/ssh_monitor.log | One line per run\nBUSINESS_HOURS_START | 8 | Logins before this hour get an off-hours warning\nBUSINESS_HOURS_END | 18 | Logins after this hour (from 19:00) get an off-hours warning\nJOURNAL_SINCE | 24 hours ago | How far back the first journal read goes\n\nThe threshold applies to the lines added since the last run, so with a 10-minute schedule it means 5 failed attempts within about 10 minutes. Raise FAILED_THRESHOLD if you only want to hear about larger bursts, and raise LOCK_DURATION to get fewer emails. Failures that arrive during the cooldown are not lost: they go into the next alert.","url":"https://sshmonitor.com/install/#step-2-set-the-configuration"},{"@type":"HowToStep","position":3,"name":"Choose API or sendmail","text":"The API is on by default. To send through a local mail transfer agent instead, set:\n\nSEND_METHOD=\"smtp\"\n\nThe sendmail path pipes a message to sendmail -t, so you need an MTA such as msmtp or Postfix that relays through an SMTP server. With msmtp on Debian or Ubuntu, install msmtp msmtp-mta and create /etc/msmtprc (mode 600) with your Forward Email alias and its generated password:\n\ndefaults\nauth on\ntls on\ntls_trust_file /etc/ssl/certs/ca-certificates.crt\nlogfile /var/log/msmtp.log\n\naccount forwardemail\nhost smtp.forwardemail.net\nport 465\ntls_starttls off\nfrom ssh-alerts@yourdomain.com\nuser ssh-alerts@yourdomain.com\npassword YOUR_GENERATED_ALIAS_PASSWORD\n\naccount default : forwardemail\n\nForward Email accepts SMTP on port 465 (TLS) and 587 (STARTTLS). The Forward Email FAQ has setup guides for sendmail, Exim, msmtp and Postfix.","url":"https://sshmonitor.com/install/#step-3-choose-api-or-sendmail"},{"@type":"HowToStep","position":4,"name":"Run a test","text":"Run the script once by hand and read its log:\n\nsudo /usr/local/bin/ssh_monitor.sh\nsudo tail -n 5 /var/log/ssh_monitor.log\n\nYou should see SSH Monitor ran at ... - Found N failed attempts in /var/log/auth.log (or the file or journal it used). The first run reads the whole current log file, or the last 24 hours of the journal, so it can find older attempts. Later runs read only new lines.\n\nAn email goes out only when N is at least FAILED_THRESHOLD and no alert went out in the last LOCK_DURATION seconds. To force a test email, set FAILED_THRESHOLD=0, remove the lock file with sudo rm -f /tmp/ssh_monitor_alert.lock, run the script, then set the threshold back.\n\nAfter a send, the log shows Alert email sent via API or Alert email via API failed. On failure, curl prints the HTTP error to the terminal, and the next run sends the same lines again.","url":"https://sshmonitor.com/install/#step-4-run-a-test"},{"@type":"HowToStep","position":5,"name":"Schedule it with cron","text":"Open root's crontab with sudo crontab -e and add this line to run the script every 10 minutes:\n\n*/10 * * * * /usr/local/bin/ssh_monitor.sh\n\nThe schedule sets both how soon you hear about a burst and the time window for FAILED_THRESHOLD. If you run it every 5 minutes, consider a lower threshold.","url":"https://sshmonitor.com/install/#step-5-schedule-it-with-cron"},{"@type":"HowToStep","position":6,"name":"Keep an eye on the run log","text":"The script appends to /var/log/ssh_monitor.log on every run, which is at least 144 lines a day at a 10-minute interval. Add it to logrotate if you keep servers for a long time:\n\n/var/log/ssh_monitor.log {\n    weekly\n    rotate 4\n    compress\n    missingok\n    notifempty\n}\n\nSave that as /etc/logrotate.d/ssh_monitor.","url":"https://sshmonitor.com/install/#step-6-keep-an-eye-on-the-run-log"}]}]}</script>
+</head>
+<body>
+<!--email_off--><a class="skip-link" href="#main"><!--/email_off-->Skip to content</a>
+<header class="site-header">
+  <div class="container header-content">
+    <!--email_off--><a class="logo" href="/"><!--/email_off-->SSHMonitor</a>
+    <nav aria-label="Main">
+      <ul class="nav-links"><li><!--email_off--><a href="/install/" aria-current="page"><!--/email_off-->Install</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->Login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute force</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Compare</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li><li><!--email_off--><a href="https://forwardemail.net" class="btn-primary" rel="noopener"><!--/email_off-->Try Forward Email</a></li></ul>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="hero">
+  <div class="container hero-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><span aria-current="page">Install guide</span></li></ol></nav>
+    <h1>How to Install SSH Monitor</h1>
+    <p class="lead">To install <code>ssh_monitor.sh</code>, download it, set three values, test one run and schedule it with cron. This guide also covers sending setup and troubleshooting.</p>
+    
+  </div>
+</div>
+<article class="container content">
+<h2 id="what-do-you-need">What do you need?</h2>
+<p>You need a Linux server with root access and a way to send email. The script finds the SSH log on Debian, Ubuntu and Red Hat style systems without changes.</p>
+<div class="table-container" tabindex="0" role="region" aria-label="Requirement, Details"><table><caption>Requirements for ssh_monitor.sh</caption><thead><tr><th scope="col">Requirement</th><th scope="col">Details</th></tr></thead><tbody><tr><th scope="row">Operating system</th><td>Linux. The script uses GNU <code>stat -c</code>, so macOS and BSD need changes.</td></tr><tr><th scope="row">Shell and tools</th><td><code>bash</code>, <code>awk</code> (mawk or gawk), <code>sed</code>, <code>grep</code>, <code>sort</code>, <code>stat</code>, <code>tail</code>, <code>head</code>, <code>hostname</code>, <code>date</code></td></tr><tr><th scope="row">Sending</th><td><code>curl</code> for the Forward Email API (default), or a working <code>sendmail</code> command</td></tr><tr><th scope="row">SSH log</th><td><code>/var/log/auth.log</code> (Debian, Ubuntu), then <code>/var/log/secure</code> (RHEL, CentOS, Rocky, AlmaLinux, Fedora), then the systemd journal through <code>journalctl</code></td></tr><tr><th scope="row">Scheduler</th><td><code>cron</code> (root's crontab)</td></tr><tr><th scope="row">Permissions</th><td>Root, to read the SSH log and write <code>/var/lib/ssh_monitor/</code> and <code>/var/log/ssh_monitor.log</code></td></tr></tbody></table></div>
+<p>Debian 12 and later do not install rsyslog by default, so a fresh install may have no <code>/var/log/auth.log</code> (<!--email_off--><a href="https://www.debian.org/releases/bookworm/amd64/release-notes/ch-information.en.html" rel="noopener"><!--/email_off-->Debian release notes, section 5.1.7</a>). The script then reads the journal for the <code>ssh</code> and <code>sshd</code> units, so you do not need to install rsyslog.</p>
+<h2 id="how-do-you-set-up-sending-with-forward-email">How do you set up sending with Forward Email?</h2>
+<p>The script sends through the Forward Email API by default. The API and SMTP sending need a paid Forward Email plan with outbound SMTP set up for your domain (<!--email_off--><a href="https://forwardemail.net/en/pricing" rel="noopener"><!--/email_off-->plans</a>).</p>
+<ol><li>Add your domain to Forward Email and finish the outbound SMTP setup (DKIM, Return-Path and DMARC records) under My Account, Domains, Settings.</li><li>Create an alias for the sender, for example <code><!--email_off-->ssh-alerts@yourdomain.com<!--/email_off--></code>. The API requires the <code>from</code> address to be an alias of your domain.</li><li>Copy your API token from <!--email_off--><a href="https://forwardemail.net/my-account/security" rel="noopener"><!--/email_off-->My Account, Security</a>.</li></ol>
+<p>To check the token before you install the script, send a test message with the same API call the script uses. The fields are form-encoded, as in the <!--email_off--><a href="https://forwardemail.net/en/email-api" rel="noopener"><!--/email_off-->API reference</a>:</p>
+<pre data-lang="bash" tabindex="0"><code class="language-bash">curl -sS --fail -X POST https://api.forwardemail.net/v1/emails \
+  -u &quot;YOUR_API_TOKEN:&quot; \
+  --data-urlencode &quot;from=<!--email_off-->ssh-alerts@yourdomain.com<!--/email_off-->&quot; \
+  --data-urlencode &quot;to=<!--email_off-->admin@yourdomain.com<!--/email_off-->&quot; \
+  --data-urlencode &quot;subject=SSH Monitor test&quot; \
+  --data-urlencode &quot;text=It works.&quot;</code></pre>
+<p>The address that receives alerts can be any mailbox. If it is on a domain that uses Forward Email for forwarding only, the free plan covers it: you set MX and TXT DNS records and need no account.</p>
+<h2 id="step-1-download-the-script">Step 1: Download the script</h2>
+<p>Save the script to <code>/usr/local/bin</code> and make it readable and executable by root only, since it will hold your API token.</p>
+<pre data-lang="bash" tabindex="0"><code class="language-bash">sudo curl -fsSL https://sshmonitor.com/ssh_monitor.sh -o /usr/local/bin/ssh_monitor.sh
+sudo chown root:root /usr/local/bin/ssh_monitor.sh
+sudo chmod 700 /usr/local/bin/ssh_monitor.sh</code></pre>
+<p>The same file is in the <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh" rel="noopener"><!--/email_off-->GitHub repository</a>. Read it before you run it.</p>
+<h2 id="step-2-set-the-configuration">Step 2: Set the configuration</h2>
+<p>Open the script with <code>sudo nano /usr/local/bin/ssh_monitor.sh</code> and edit the variables at the top.</p>
+<div class="table-container" tabindex="0" role="region" aria-label="Variable, Default, What it controls"><table><caption>Configuration variables in ssh_monitor.sh</caption><thead><tr><th scope="col">Variable</th><th scope="col">Default</th><th scope="col">What it controls</th></tr></thead><tbody><tr><th scope="row"><code>EMAIL_TO</code></th><td><code><!--email_off-->admin@yourdomain.com<!--/email_off--></code></td><td>Address that receives alerts</td></tr><tr><th scope="row"><code>EMAIL_FROM</code></th><td><code><!--email_off-->ssh-alerts@yourdomain.com<!--/email_off--></code></td><td>Sender address, an alias on your Forward Email domain</td></tr><tr><th scope="row"><code>FORWARD_EMAIL_API_KEY</code></th><td><code>your_api_key_here</code></td><td>Your Forward Email API token</td></tr><tr><th scope="row"><code>SEND_METHOD</code></th><td><code>api</code></td><td><code>api</code> for the Forward Email API, <code>smtp</code> for the local <code>sendmail</code> command</td></tr><tr><th scope="row"><code>LOG_FILE</code></th><td><code>/var/log/auth.log</code></td><td>SSH log to read. If it does not exist, the script uses <code>/var/log/secure</code>, then the systemd journal</td></tr><tr><th scope="row"><code>FAILED_THRESHOLD</code></th><td><code>5</code></td><td>Failed attempts in the new log lines that trigger an email</td></tr><tr><th scope="row"><code>ALERT_LOCKFILE</code></th><td><code>/tmp/ssh_monitor_alert.lock</code></td><td>File whose change time marks the last sent alert</td></tr><tr><th scope="row"><code>LOCK_DURATION</code></th><td><code>3600</code></td><td>Seconds to wait after a sent alert before the next one</td></tr><tr><th scope="row"><code>STATE_DIR</code></th><td><code>/var/lib/ssh_monitor</code></td><td>Where the read position (<code>position</code>) or journal cursor (<code>journal.cursor</code>) is stored</td></tr><tr><th scope="row"><code>RUN_LOG</code></th><td><code>/var/log/ssh_monitor.log</code></td><td>One line per run</td></tr><tr><th scope="row"><code>BUSINESS_HOURS_START</code></th><td><code>8</code></td><td>Logins before this hour get an off-hours warning</td></tr><tr><th scope="row"><code>BUSINESS_HOURS_END</code></th><td><code>18</code></td><td>Logins after this hour (from 19:00) get an off-hours warning</td></tr><tr><th scope="row"><code>JOURNAL_SINCE</code></th><td><code>24 hours ago</code></td><td>How far back the first journal read goes</td></tr></tbody></table></div>
+<p>The threshold applies to the lines added since the last run, so with a 10-minute schedule it means 5 failed attempts within about 10 minutes. Raise <code>FAILED_THRESHOLD</code> if you only want to hear about larger bursts, and raise <code>LOCK_DURATION</code> to get fewer emails. Failures that arrive during the cooldown are not lost: they go into the next alert.</p>
+<h2 id="step-3-choose-api-or-sendmail">Step 3: Choose API or sendmail</h2>
+<p>The API is on by default. To send through a local mail transfer agent instead, set:</p>
+<pre data-lang="bash" tabindex="0"><code class="language-bash">SEND_METHOD=&quot;smtp&quot;</code></pre>
+<p>The sendmail path pipes a message to <code>sendmail -t</code>, so you need an MTA such as msmtp or Postfix that relays through an SMTP server. With msmtp on Debian or Ubuntu, install <code>msmtp msmtp-mta</code> and create <code>/etc/msmtprc</code> (mode 600) with your Forward Email alias and its generated password:</p>
+<pre data-lang="text" tabindex="0"><code class="language-text">defaults
+auth on
+tls on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile /var/log/msmtp.log
+
+account forwardemail
+host smtp.forwardemail.net
+port 465
+tls_starttls off
+from <!--email_off-->ssh-alerts@yourdomain.com<!--/email_off-->
+user <!--email_off-->ssh-alerts@yourdomain.com<!--/email_off-->
+password YOUR_GENERATED_ALIAS_PASSWORD
+
+account default : forwardemail</code></pre>
+<p>Forward Email accepts SMTP on port 465 (TLS) and 587 (STARTTLS). The <!--email_off--><a href="https://forwardemail.net/en/faq" rel="noopener"><!--/email_off-->Forward Email FAQ</a> has setup guides for sendmail, Exim, msmtp and Postfix.</p>
+<h2 id="step-4-run-a-test">Step 4: Run a test</h2>
+<p>Run the script once by hand and read its log:</p>
+<pre data-lang="bash" tabindex="0"><code class="language-bash">sudo /usr/local/bin/ssh_monitor.sh
+sudo tail -n 5 /var/log/ssh_monitor.log</code></pre>
+<p>You should see <code>SSH Monitor ran at ... - Found N failed attempts in /var/log/auth.log</code> (or the file or journal it used). The first run reads the whole current log file, or the last 24 hours of the journal, so it can find older attempts. Later runs read only new lines.</p>
+<p>An email goes out only when <code>N</code> is at least <code>FAILED_THRESHOLD</code> and no alert went out in the last <code>LOCK_DURATION</code> seconds. To force a test email, set <code>FAILED_THRESHOLD=0</code>, remove the lock file with <code>sudo rm -f /tmp/ssh_monitor_alert.lock</code>, run the script, then set the threshold back.</p>
+<p>After a send, the log shows <code>Alert email sent via API</code> or <code>Alert email via API failed</code>. On failure, <code>curl</code> prints the HTTP error to the terminal, and the next run sends the same lines again.</p>
+<h2 id="step-5-schedule-it-with-cron">Step 5: Schedule it with cron</h2>
+<p>Open root's crontab with <code>sudo crontab -e</code> and add this line to run the script every 10 minutes:</p>
+<pre data-lang="text" tabindex="0"><code class="language-text">*/10 * * * * /usr/local/bin/ssh_monitor.sh</code></pre>
+<p>The schedule sets both how soon you hear about a burst and the time window for <code>FAILED_THRESHOLD</code>. If you run it every 5 minutes, consider a lower threshold.</p>
+<h2 id="step-6-keep-an-eye-on-the-run-log">Step 6: Keep an eye on the run log</h2>
+<p>The script appends to <code>/var/log/ssh_monitor.log</code> on every run, which is at least 144 lines a day at a 10-minute interval. Add it to logrotate if you keep servers for a long time:</p>
+<pre data-lang="text" tabindex="0"><code class="language-text">/var/log/ssh_monitor.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}</code></pre>
+<p>Save that as <code>/etc/logrotate.d/ssh_monitor</code>.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="no-email-arrives">No email arrives</h3>
+<p>Check <code>/var/log/ssh_monitor.log</code> first. If the failed count is below the threshold, no email is due. If an alert went out in the last hour, the lock file holds the next one back and the attempts wait for the next alert. If the log says the API call failed, test your token with the <code>curl</code> command above and confirm that <code>EMAIL_FROM</code> is an alias on a domain with outbound SMTP set up.</p>
+<h3 id="no-ssh-log-found">no SSH log found</h3>
+<p>The run log shows this when none of <code>LOG_FILE</code>, <code>/var/log/secure</code> and <code>journalctl</code> exist. Set <code>LOG_FILE</code> to the file your syslog daemon writes sshd messages to.</p>
+<h3 id="the-count-is-always-0">The count is always 0</h3>
+<p>Run <code>sudo tail /var/log/auth.log</code> (or <code>sudo journalctl -u ssh -u sshd -n 20</code>) and check that sshd lines appear there. If they do, check <code>/var/lib/ssh_monitor/position</code>: the script only counts lines added after that position. Delete the file to make the next run read the whole log again. See <!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->detecting SSH brute-force attempts</a> for the log lines the script counts.</p>
+<h3 id="stat-illegal-option----c">stat: illegal option -- c</h3>
+<p>You are on macOS or BSD. The script uses GNU <code>stat -c</code> for the lock and the read position. It targets Linux.</p>
+<h2 id="how-do-you-uninstall-it">How do you uninstall it?</h2>
+<p>Remove the cron line with <code>sudo crontab -e</code>, then delete the files:</p>
+<pre data-lang="bash" tabindex="0"><code class="language-bash">sudo rm -f /usr/local/bin/ssh_monitor.sh /tmp/ssh_monitor_alert.lock /var/log/ssh_monitor.log
+sudo rm -rf /var/lib/ssh_monitor</code></pre>
+</article>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-column">
+        <p class="footer-title">SSH Monitor</p>
+        <p>A free SSH log monitoring script from the <!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email</a> team. It emails you when failed SSH logins pile up.</p>
+        <div class="social-links">
+          <!--email_off--><a href="https://github.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg><span class="sr-only">Forward Email on GitHub</span></a>
+          <!--email_off--><a href="https://x.com/fwdemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span class="sr-only">Forward Email on X</span></a>
+          <!--email_off--><a href="https://www.youtube.com/forwardemail" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span class="sr-only">Forward Email on YouTube</span></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Guides</p>
+        <ul><li><!--email_off--><a href="/"><!--/email_off-->Home</a></li><li><!--email_off--><a href="/install/"><!--/email_off-->Install guide</a></li><li><!--email_off--><a href="/ssh-login-alerts/"><!--/email_off-->SSH login alerts</a></li><li><!--email_off--><a href="/ssh-brute-force-detection/"><!--/email_off-->Brute-force detection</a></li><li><!--email_off--><a href="/fail2ban-vs-logwatch/"><!--/email_off-->Fail2Ban and Logwatch comparison</a></li><li><!--email_off--><a href="/faq/"><!--/email_off-->FAQ</a></li><li><!--email_off--><a href="/about/"><!--/email_off-->About</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Forward Email</p>
+        <ul>
+          <li><!--email_off--><a href="https://forwardemail.net" rel="noopener"><!--/email_off-->Forward Email home</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/pricing" rel="noopener"><!--/email_off-->Plans and pricing</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/email-api" rel="noopener"><!--/email_off-->Email API reference</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/faq" rel="noopener"><!--/email_off-->Forward Email FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">Project</p>
+        <ul>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com" rel="noopener"><!--/email_off-->Source code on GitHub</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/issues" rel="noopener"><!--/email_off-->Report an issue</a></li>
+          <li><!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/ssh_monitor.sh" rel="noopener"><!--/email_off-->Read ssh_monitor.sh</a></li>
+          <li><!--email_off--><a href="https://forwardemail.net/en/security" rel="noopener"><!--/email_off-->Report a security issue</a></li>
+          <li><!--email_off--><a href="/about/#privacy-note"><!--/email_off-->Privacy policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>SSH Monitor is made by the Forward Email team. No cookies, no tracking.</p>
+      <!--email_off--><a href="https://github.com/forwardemail/sshmonitor.com/blob/main/src/pages/install.md" class="edit-link" rel="noopener"><!--/email_off--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> Edit this page on GitHub</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
